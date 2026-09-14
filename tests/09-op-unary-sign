@@ -1,0 +1,179 @@
+// ===========================================================================
+// Block 09 — Unary Plus and Minus (+ -)
+// Description : 09-op-unary-sign.md
+// Spec        : Language D.md §8.6 Unary plus and minus, §5.5 Unary
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Note: `Unary : [ + | - | not ] Primary` and Primary does not derive
+// Reference, so `-a` for a variable a is not derivable as written (Q4).
+// Every test here uses `-(a)` or `0 - a` instead; the bare form is in the
+// open section.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 09 — Unary Plus and Minus =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types --"
+// --------------------------------------------------------------------------
+
+// T-UNS-001  op Integer -> Integer   expect -5
+print -5
+
+// T-UNS-002  op Integer -> Integer   expect 5
+print +5
+
+// T-UNS-003  op Real -> Real         expect -2.5
+print -2.5
+
+// T-UNS-004  op Real -> Real         expect 2.5
+print +2.5
+
+// T-UNS-005  minus of a negative     expect 5
+print -(-5)
+
+// T-UNS-006  minus of zero           expect 0
+print -0
+
+// T-UNS-007  minus of a parenthesised expression   expect -5
+print -(2 + 3)
+
+// T-UNS-008  the type is preserved   expect true
+if true then
+    var a := -5
+    print a is int
+end
+
+// T-UNS-009  the type is preserved   expect true
+if true then
+    var a := -5.0
+    print a is real
+end
+
+// --------------------------------------------------------------------------
+print "-- 2xx semantics and precedence --"
+// --------------------------------------------------------------------------
+
+// T-UNS-201  unary binds tighter than binary +   expect 1
+print -2 + 3
+
+// T-UNS-202  unary binds tighter than *          expect -6
+print -2 * 3
+
+// T-UNS-203  binary minus then unary minus       expect 8
+print 5 - -3
+
+// T-UNS-204  expect 2
+print 5 + -3
+
+// T-UNS-205  unary binds tighter than the comparison   expect true
+print -2 < 0
+
+// T-UNS-206  expect -10
+print -(2 + 3) * 2
+
+// T-UNS-207  prefixes stack (Q4)   expect 5
+print - -5
+
+// T-UNS-208  three stacked prefixes   expect 5
+print -+-5
+
+// T-UNS-210  parenthesise to test the negated value   expect true
+if true then
+    var a := 5
+    print (-a) is int
+end
+
+// --------------------------------------------------------------------------
+print "-- 3xx unary on a reference (Q4) --"
+// --------------------------------------------------------------------------
+
+// T-UNS-301  unary minus on a bare reference   expect -5
+if true then
+    var a := 5
+    print -a
+end
+
+// T-UNS-302  the parenthesised form             expect -5
+if true then
+    var a := 5
+    print -(a)
+end
+
+// T-UNS-303  the binary form                    expect -5
+if true then
+    var a := 5
+    print 0 - a
+end
+
+// T-UNS-304  the accessor binds before the prefix   expect -5
+if true then
+    var t := [5]
+    print -t[1]
+end
+
+// T-UNS-305  a call result                      expect -5
+if true then
+    var f := func => 5
+    print -f()
+end
+
+// T-UNS-306  a tuple element                    expect -2.5
+if true then
+    var t := {x := 2.5}
+    print -t.x
+end
+
+// T-UNS-307  unary plus on a reference          expect 5
+if true then
+    var a := 5
+    print +a
+end
+
+print "== end of block 09 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-UNS-101  runtime error: boolean is not an operand of unary -
+// print -true
+
+// T-UNS-102  runtime error
+// print +false
+
+// T-UNS-103  runtime error: string is not an operand
+// print -"ab"
+
+// T-UNS-104  runtime error
+// print +"ab"
+
+// T-UNS-105  runtime error: array is not an operand
+// print -[1,2]
+
+// T-UNS-106  runtime error: tuple is not an operand
+// print -{a := 1}
+
+// T-UNS-107  runtime error: func is not an operand
+// print -(func => 0)
+
+// T-UNS-108  runtime error: none cannot act as an operand
+// var n
+// print -(n)
+
+// T-UNS-109  runtime error
+// print -none
+
+// T-UNS-110  runtime error: none on a bare reference
+// var n
+// print -n
+
+// T-UNS-209  runtime error: parses as -(a is int), unary minus on a boolean (Q20)
+// var a := 5
+// print -a is int

@@ -1,0 +1,321 @@
+// ===========================================================================
+// Block 12 — Arrays
+// Description : 12-type-arrays.md
+// Spec        : Language D.md §7.5 Array, §6 References
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 12 — Arrays =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx literals and access --"
+// --------------------------------------------------------------------------
+
+// T-ARR-001  numbering begins with one   expect 1
+if true then
+    var a := [1, 2, 3]
+    print a[1]
+end
+
+// T-ARR-002  expect 3
+if true then
+    var a := [1, 2, 3]
+    print a[3]
+end
+
+// T-ARR-003  an empty array literal      expect true
+if true then
+    var a := []
+    print a is []
+end
+
+// T-ARR-004  single element              expect 1
+if true then
+    var a := [1]
+    print a[1]
+end
+
+// T-ARR-005  elements of any type        expect 2.5
+if true then
+    var a := [1, 2.5, "s", true]
+    print a[2]
+end
+
+// T-ARR-006  nested arrays               expect 3
+if true then
+    var a := [[1,2],[3,4]]
+    print a[2][1]
+end
+
+// T-ARR-007  a tuple inside an array     expect 1
+if true then
+    var a := [{x := 1}]
+    print a[1].x
+end
+
+// T-ARR-008  a function inside an array  expect 7
+if true then
+    var a := [func => 7]
+    print a[1]()
+end
+
+// T-ARR-009  elements are expressions    expect 2 then 4
+if true then
+    var a := [1+1, 2*2]
+    print a[1], a[2]
+end
+
+// T-ARR-010  the index is any integer expression   expect 20
+if true then
+    var i := 2
+    var a := [10, 20, 30]
+    print a[i]
+end
+
+// T-ARR-011  expect 20
+if true then
+    var a := [10, 20, 30]
+    print a[1 + 1]
+end
+
+// T-ARR-012  concatenation, cf. T-ADD-006   expect 3
+if true then
+    var a := [1,2] + [3]
+    print a[3]
+end
+
+// --------------------------------------------------------------------------
+print "-- 2xx dynamic size and associative keys --"
+// --------------------------------------------------------------------------
+
+// T-ARR-201  the spec's own example        expect 25
+if true then
+    var t := []
+    t[10] := 25
+    print t[10]
+end
+
+// T-ARR-202  a function at a sparse key    expect 2
+if true then
+    var t := []
+    t[100] := func(x) => x + 1
+    print t[100](1)
+end
+
+// T-ARR-203  a tuple at a sparse key       expect 2.7
+if true then
+    var t := []
+    t[1000] := {a := 1, b := 2.7}
+    print t[1000].b
+end
+
+// T-ARR-204  the full spec example         expect 25 1 2
+if true then
+    var t := []
+    t[10] := 25; t[100] := 1; t[1000] := 2
+    print t[10], t[100], t[1000]
+end
+
+// T-ARR-205  an existing element is replaced   expect 9
+if true then
+    var a := [1,2,3]
+    a[2] := 9
+    print a[2]
+end
+
+// T-ARR-206  the array grows                   expect 4
+if true then
+    var a := [1,2,3]
+    a[4] := 4
+    print a[4]
+end
+
+// T-ARR-207  an element may change type        expect true
+if true then
+    var a := [1]
+    a[1] := "s"
+    print a[1] is string
+end
+
+// T-ARR-208  a gap left by a sparse write reads as none (Q8)   expect none
+if true then
+    var a := []
+    a[2] := 2
+    print a[1]
+end
+
+// T-ARR-209  the presence test                  expect true
+if true then
+    var a := [1,2,3]
+    print a[4] is none
+end
+
+// T-ARR-210  reading a missing key does not create it   expect true then [1]
+if true then
+    var a := [1]
+    print a[5] is none
+    print a
+end
+
+// T-ARR-211  printed in ascending key order, gaps not shown (Q32)   expect [2, 1]
+if true then
+    var t := []
+    t[10] := 1; t[3] := 2
+    print t
+end
+
+// T-ARR-212  iterated in ascending key order    expect 2 then 1
+if true then
+    var t := []
+    t[10] := 1; t[3] := 2
+    for v in t loop print v end
+end
+
+// --------------------------------------------------------------------------
+print "-- 1xx missing keys read as none (Q8) --"
+// --------------------------------------------------------------------------
+
+// T-ARR-101  index 0 holds nothing              expect none
+if true then
+    var a := [1,2,3]
+    print a[0]
+end
+
+// T-ARR-102  past the last element              expect none
+if true then
+    var a := [1,2,3]
+    print a[4]
+end
+
+// T-ARR-103  a negative key                     expect none
+if true then
+    var a := [1,2,3]
+    print a[-1]
+end
+
+// --------------------------------------------------------------------------
+print "-- 3xx arrays in other constructs --"
+// --------------------------------------------------------------------------
+
+// T-ARR-301  the spec's own iteration example   expect 15
+if true then
+    var array := [1,2,3,4,5]
+    var sum := 0
+    for i in array loop
+        sum := sum + i
+    end
+    print sum
+end
+
+// T-ARR-302  the [ ] type indicator             expect true
+if true then
+    var a := [1]
+    print a is []
+end
+
+// T-ARR-303  an array passed as an argument     expect 7
+if true then
+    var f := func(x) => x[1]
+    print f([7])
+end
+
+// T-ARR-304  an array returned from a function  expect 2
+if true then
+    var f := func => [1,2]
+    print f()[2]
+end
+
+// T-ARR-305  iterating an empty array produces no output
+for i in [] loop
+    print "x"
+end
+
+// --------------------------------------------------------------------------
+print "-- 4xx edge cases --"
+// --------------------------------------------------------------------------
+
+// T-ARR-401  expect []
+if true then
+    var a := []
+    print a + []
+end
+
+// T-ARR-402  deep nesting     expect 1
+if true then
+    var a := [[[1]]]
+    print a[1][1][1]
+end
+
+// T-ARR-403  arrays alias on assignment (Q26)   expect 9
+if true then
+    var a := [1], b := a
+    b[1] := 9
+    print a[1]
+end
+
+// T-ARR-404  elements are ordinary operands   expect 3
+if true then
+    var a := [1,2]
+    print a[1] + a[2]
+end
+
+// T-ARR-405  rendering of an empty array (Q15)   expect []
+if true then
+    var a := []
+    print a
+end
+
+// T-ARR-406  one rendering rule at every depth   expect [1, a, true, 1.5, [2], {x := 3}]
+print [1, "a", true, 1.5, [2], {x := 3}]
+
+print "== end of block 12 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-ARR-104  runtime error: the index must be an integer expression
+// var a := [1,2,3]
+// print a[1.5]
+
+// T-ARR-105  runtime error
+// var a := [1,2,3]
+// print a["1"]
+
+// T-ARR-106  runtime error
+// var a := [1,2,3]
+// print a[true]
+
+// T-ARR-107  runtime error: indexing a non-array
+// var a := 1
+// print a[1]
+
+// T-ARR-108  runtime error: strings are not indexable
+// var a := "abc"
+// print a[1]
+
+// T-ARR-109  runtime error: a tuple is accessed with . not [ ]
+// var a := {x := 1}
+// print a[1]
+
+// T-ARR-110  syntax error: trailing comma
+// var a := [1, 2,]
+
+// T-ARR-111  syntax error: missing comma
+// var a := [1 2]
+
+// T-ARR-112  syntax error: an index expression is required
+// var a := [1,2]
+// print a[]
+
+// T-ARR-213  runtime error: the missing key reads as none, which cannot be
+//            an operand (Q8, Q31)
+// var a := [1,2,3]
+// print a[1] + a[4]

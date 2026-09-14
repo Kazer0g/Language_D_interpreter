@@ -1,0 +1,349 @@
+// ===========================================================================
+// Block 16 — Loops and exit
+// Description : 16-stmt-loops.md
+// Spec        : Language D.md §4.5 Loop, §4.6 Exit
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// T-LOOP-301 (the spec's 100-iteration example) and T-LOOP-303 (a loop with
+// no exit) are in the commented section: one floods the output, the other
+// never terminates. T-LOOP-302 is the compact equivalent of the first.
+//
+// Relies on: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 16 — Loops and exit =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx while loop --"
+// --------------------------------------------------------------------------
+
+// T-LOOP-001  expect 3
+if true then
+    var i := 0
+    while i < 3 loop i := i + 1 end
+    print i
+end
+
+// T-LOOP-002  the condition is checked first   expect no output
+while false loop print "x" end
+
+// T-LOOP-003  expect 3 2 1
+if true then
+    var i := 3
+    while i > 0 loop print i; i := i - 1 end
+end
+
+// T-LOOP-004  the condition is any expression   expect 2
+if true then
+    var i := 0
+    while i < 2 and true loop i := i + 1 end
+    print i
+end
+
+// --------------------------------------------------------------------------
+print "-- 1xx for loop over a range --"
+// --------------------------------------------------------------------------
+
+// T-LOOP-101  the spec's own example, no loop variable   expect Hello x3
+for 1..3 loop
+    print "Hello"
+end
+
+// T-LOOP-102  with a loop variable   expect 1 2 3
+for i in 1..3 loop
+    print i
+end
+
+// T-LOOP-103  expect 15
+if true then
+    var s := 0
+    for i in 1..5 loop s := s + i end
+    print s
+end
+
+// T-LOOP-104  the bounds are expressions   expect 1 2 3
+if true then
+    var a := 1, b := 3
+    for i in a..b loop print i end
+end
+
+// T-LOOP-105  a single-value range   expect 1
+for i in 1..1 loop
+    print i
+end
+
+// T-LOOP-111  multi-line body   expect 1 2 3
+for i in 1..3 loop
+    print i
+end
+
+// T-LOOP-106  a descending range runs zero times (Q37)   expect no output
+for i in 3..1 loop print i end
+
+// T-LOOP-108  the loop variable may be assigned (Q38)   expect 9 9
+for i in 1..2 loop i := 9; print i end
+
+// T-LOOP-112  the bounds are evaluated once   expect 3
+if true then
+    var n := 3, c := 0
+    for i in 1..n loop n := 10; c := c + 1 end
+    print c
+end
+
+// T-LOOP-113  inclusive at both ends (Q39)   expect 0
+for i in 0..0 loop print i end
+
+// T-LOOP-114  negative bounds   expect -2 -1 0
+for i in -2..0 loop print i end
+
+// T-LOOP-115  assignment does not affect the sequence   expect 11 12 13
+for i in 1..3 loop i := i + 10; print i end
+
+// --------------------------------------------------------------------------
+print "-- 2xx for loop over an aggregate --"
+// --------------------------------------------------------------------------
+
+// T-LOOP-201  the spec's own example   expect 15
+if true then
+    var array := [1,2,3,4,5]
+    var sum := 0
+    for i in array loop sum := sum + i end
+    print sum
+end
+
+// T-LOOP-202  an array literal in the header   expect 10 then 20
+for v in [10, 20] loop
+    print v
+end
+
+// T-LOOP-203  a tuple is also iterable   expect 1 then 2
+for v in {a := 1, b := 2} loop
+    print v
+end
+
+// T-LOOP-204  elements of any type   expect 1 s true
+for v in [1, "s", true] loop
+    print v
+end
+
+// T-LOOP-205  an empty array   expect no output
+for v in [] loop
+    print v
+end
+
+// T-LOOP-206  an aggregate without a loop variable   expect x twice
+for [1,2] loop
+    print "x"
+end
+
+// T-LOOP-210  ascending key order, not insertion order (Q32)   expect 1 then 2
+if true then
+    var t := []
+    t[100] := 2; t[10] := 1
+    for v in t loop print v end
+end
+
+// T-LOOP-211  the loop variable takes the value, names not reachable (Q13)   expect 1
+for v in {a := 1} loop print v end
+
+// T-LOOP-212  the loop variable is a copy, not an alias of the slot   expect [1, 2]
+if true then
+    var a := [1, 2]
+    for v in a loop v := 0 end
+    print a
+end
+
+// T-LOOP-213  keys to visit are fixed at loop entry   expect [1, 2]
+if true then
+    var a := [1]
+    for v in a loop a[2] := 2 end
+    print a
+end
+
+// --------------------------------------------------------------------------
+print "-- 3xx infinite loop, header omitted --"
+// --------------------------------------------------------------------------
+
+// T-LOOP-302  the header is optional   expect 1
+if true then
+    var i := 0
+    loop
+        i := i + 1
+        if i = 1 => exit
+    end
+    print i
+end
+
+// --------------------------------------------------------------------------
+print "-- 4xx exit --"
+// --------------------------------------------------------------------------
+
+// T-LOOP-401  expect 10
+if true then
+    var i := 0
+    loop
+        i := i + 1
+        if i = 10 => exit
+    end
+    print i
+end
+
+// T-LOOP-402  exit leaves a while loop   expect done
+while true loop exit end
+print "done"
+
+// T-LOOP-403  exit leaves a for loop     expect done
+for i in 1..10 loop if i = 3 => exit end
+print "done"
+
+// T-LOOP-404  exit on the first iteration   expect 1
+for i in 1..3 loop print i; exit end
+
+// T-LOOP-408  exit leaves the innermost loop   expect inner done then done
+loop
+    loop exit end
+    print "inner done"
+    exit
+end
+print "done"
+
+// T-LOOP-409  exit inside a loop that also declares a function   expect done
+for i in 1..3 loop var f := func => 1; exit end
+print "done"
+
+// T-LOOP-410  statements after exit do not run   expect a
+loop
+    print "a"
+    exit
+    print "b"
+end
+
+// --------------------------------------------------------------------------
+print "-- 5xx nesting and scope --"
+// --------------------------------------------------------------------------
+
+// T-LOOP-501  nested for loops   expect 4
+if true then
+    var s := 0
+    for i in 1..2 loop
+        for j in 1..2 loop s := s + 1 end
+    end
+    print s
+end
+
+// T-LOOP-502  the loop body is a scope   expect 1
+if true then
+    var x := 1
+    for i in 1..1 loop var x := 9 end
+    print x
+end
+
+// T-LOOP-503  nested aggregate loops   expect 60
+if true then
+    var s := 0
+    for i in [1,2] loop
+        for j in [10,20] loop s := s + j end
+    end
+    print s
+end
+
+// T-LOOP-504  the inner i hides the outer one   expect 1 2 1 2
+for i in 1..2 loop
+    for i in 1..2 loop print i end
+end
+
+// T-LOOP-505  the loop variable hides an outer variable   expect 1 2 then 5
+if true then
+    var i := 5
+    for i in 1..2 loop print i end
+    print i
+end
+
+// T-LOOP-506  a short if inside a loop body   expect 10
+if true then
+    var s := 0
+    for i in 1..3 loop if i = 2 => s := s + 10
+    end
+    print s
+end
+
+print "== end of block 16 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-LOOP-006  syntax error: a Body requires at least one Statement
+// while true loop end
+
+// T-LOOP-007  syntax error: loop is required
+// var i := 0
+// while i < 3 i := i + 1 end
+
+// T-LOOP-110  runtime error: the bounds must be integer
+// for i in "a".."c" loop print i end
+
+// T-LOOP-207  runtime error: the type must be array or tuple
+// for v in 5 loop print v end
+
+// T-LOOP-208  runtime error: a string is not an iterable aggregate
+// for v in "abc" loop print v end
+
+// T-LOOP-209  runtime error: none cannot act as an operand
+// var n
+// for v in n loop print v end
+
+// T-LOOP-405  syntax error: exit outside a loop, rejected by the parser (Q24)
+// exit
+
+// T-LOOP-406  syntax error: exit outside a loop
+// if true then exit end
+
+// T-LOOP-407  syntax error: a function body is not a loop
+// var f := func is exit end
+// f()
+
+// T-LOOP-411  syntax error: the function body starts a fresh context
+// loop var f := func is exit end; exit end
+
+// T-LOOP-412  syntax error and NO output: the check happens before execution
+// print 1
+// exit
+
+// T-LOOP-107  runtime error: the loop variable's scope is the loop body
+// for i in 1..3 loop print i end
+// print i
+
+// T-LOOP-117  syntax error: the loop variable is an IDENT, 1i is two tokens (Q22)
+// for 1i in 1..3 loop print 1i end
+
+// T-LOOP-005  runtime error: a non-boolean loop condition (Q34)
+// while 1 loop exit end
+
+// T-LOOP-109  runtime error: the bounds must be integer values (Q12)
+// for i in 1.5..3.5 loop print i end
+
+// T-LOOP-116  runtime error: one real bound is enough to fail
+// for i in 1..2.0 loop print i end
+
+// ===========================================================================
+// Not composable — see 16-stmt-loops.md
+// ===========================================================================
+
+// T-LOOP-301  the spec's own 100-iteration example — floods the output;
+//             T-LOOP-302 above is the compact equivalent
+// var i := 0
+// loop
+//     print "Hello"
+//     i := i + 1
+//     if i = 100 => exit
+// end
+// print i
+
+// T-LOOP-303  an accepted program that never terminates
+// loop print "x" end

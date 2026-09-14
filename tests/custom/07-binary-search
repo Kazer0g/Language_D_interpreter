@@ -1,0 +1,93 @@
+// ===========================================================================
+// Custom 07 — Binary search and linear search
+// Exercises: while loop, exit from a while loop, integer division for the
+//            midpoint, searching for a value that is absent
+//
+// The array is 1-based (Language D.md §7.5), so lo starts at 1 and hi at n.
+// ===========================================================================
+
+print "== Binary search =="
+
+var a := [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]
+
+var n := 0
+for v in a loop
+    n := n + 1
+end
+print "length is", n              // expect 10
+
+// --- search for 23: present at position 6 ---
+
+var target := 23
+var lo := 1, hi := n, found := 0
+while lo <= hi loop
+    var mid := (lo + hi) / 2
+    if a[mid] = target then
+        found := mid
+        exit
+    end
+    if a[mid] < target then
+        lo := mid + 1
+    else
+        hi := mid - 1
+    end
+end
+print "23 found at", found        // expect 6
+
+// --- search for 2: the first element ---
+
+var t2 := 2
+var lo2 := 1, hi2 := n, f2 := 0
+while lo2 <= hi2 loop
+    var mid := (lo2 + hi2) / 2
+    if a[mid] = t2 then
+        f2 := mid
+        exit
+    end
+    if a[mid] < t2 then lo2 := mid + 1 else hi2 := mid - 1 end
+end
+print "2 found at", f2            // expect 1
+
+// --- search for 91: the last element ---
+
+var t3 := 91
+var lo3 := 1, hi3 := n, f3 := 0
+while lo3 <= hi3 loop
+    var mid := (lo3 + hi3) / 2
+    if a[mid] = t3 then
+        f3 := mid
+        exit
+    end
+    if a[mid] < t3 then lo3 := mid + 1 else hi3 := mid - 1 end
+end
+print "91 found at", f3           // expect 10
+
+// --- search for 40: absent, so found stays 0 ---
+
+var t4 := 40
+var lo4 := 1, hi4 := n, f4 := 0
+while lo4 <= hi4 loop
+    var mid := (lo4 + hi4) / 2
+    if a[mid] = t4 then
+        f4 := mid
+        exit
+    end
+    if a[mid] < t4 then lo4 := mid + 1 else hi4 := mid - 1 end
+end
+print "40 found at", f4           // expect 0, meaning not present
+
+print "== Linear search =="
+
+// --- the same answers by scanning, as a cross-check ---
+
+var want := 38
+var at := 0
+for i in 1..n loop
+    if a[i] = want then
+        at := i
+        exit
+    end
+end
+print "38 found at", at           // expect 7
+
+print "== end =="

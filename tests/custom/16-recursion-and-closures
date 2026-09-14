@@ -1,0 +1,176 @@
+// ===========================================================================
+// Custom 16 — Recursion and closures
+// Exercises: recursive functions and mutual recursion (Q19), closures that
+//            read and assign captured variables, function factories, a
+//            captured local outliving its call, arrays as shared state (Q26),
+//            probing an array with `is none` (Q8), string equality (Q5),
+//            `not x` / `-x` on bare references (Q4)
+//
+// Written after the decisions were taken, so unlike the older programs it
+// uses the bare prefix forms and lets function bodies see their surroundings.
+// ===========================================================================
+
+print "== Recursion =="
+
+// --- greatest common divisor, Euclid by remainder (no modulo: n - (n/d)*d) ---
+
+var gcd := func(a, b) is
+    if b = 0 then return a end
+    return gcd(b, a - (a / b) * b)
+end
+print gcd(48, 18)                   // expect 6
+print gcd(17, 5)                    // expect 1
+print gcd(100, 75)                  // expect 25
+
+// --- fast exponentiation by squaring ---
+
+var power := func(base, e) is
+    if e = 0 then return 1 end
+    if e - (e / 2) * 2 = 0 then
+        var h := power(base, e / 2)
+        return h * h
+    end
+    return base * power(base, e - 1)
+end
+print power(2, 10)                  // expect 1024
+print power(3, 5)                   // expect 243
+print power(7, 0)                   // expect 1
+
+// --- recursion over an array: a missing key reads as none, so `is none`
+//     is the stopping test (Q8) ---
+
+var sumFrom := func(a, i) is
+    if a[i] is none then return 0 end
+    return a[i] + sumFrom(a, i + 1)
+end
+print sumFrom([1, 2, 3, 4, 5], 1)   // expect 15
+print sumFrom([], 1)                // expect 0
+
+// --- nesting depth of an array value ---
+
+var depth := func(v) is
+    if not v is [] then return 0 end       // not (v is []): is binds inside not (Q20)
+    var best := 0
+    for e in v loop
+        var d := depth(e)
+        if d > best => best := d
+    end
+    return best + 1
+end
+print depth(1)                      // expect 0
+print depth([])                     // expect 1
+print depth([1, [2, [3]], []])      // expect 3
+
+// --- mutual recursion: both names are declared first and bound later,
+//     which works because a body resolves names at call time (Q19) ---
+
+var isEven, isOdd
+isEven := func(n) is
+    if n = 0 then return true end
+    return isOdd(n - 1)
+end
+isOdd := func(n) is
+    if n = 0 then return false end
+    return isEven(n - 1)
+end
+print isEven(10), isOdd(7)          // expect true true
+print isEven(3), isOdd(4)           // expect false false
+
+// --- unary minus on a reference (Q4) ---
+
+var neg := func(x) => -x
+print neg(5), neg(-2.5), -neg(1)    // expect -5 2.5 1
+
+print "== Closures =="
+
+// --- a counter: the body assigns a captured variable ---
+
+var count := 0
+var tick := func is
+    count := count + 1
+    return count
+end
+tick(); tick()
+print tick()                        // expect 3
+print count                         // expect 3
+
+// --- a factory: every call gets its own captured local ---
+
+var makeCounter := func is
+    var n := 0
+    return func is n := n + 1; return n end
+end
+var c1 := makeCounter(), c2 := makeCounter()
+c1(); c1()
+print c1(), c2()                    // expect 3 1
+
+// --- an adder factory: captures a parameter ---
+
+var adder := func(k) => func(x) => x + k
+var add5 := adder(5)
+print add5(10), adder(-1)(10)       // expect 15 9
+
+// --- composition ---
+
+var compose := func(f, g) => func(x) => f(g(x))
+var inc := func(x) => x + 1
+var dbl := func(x) => x * 2
+print compose(inc, dbl)(5)          // expect 11
+print compose(dbl, inc)(5)          // expect 12
+print compose(compose(inc, inc), dbl)(1)     // expect 4
+
+// --- a captured array as shared state (arrays alias, Q26) ---
+
+var log := []
+var logLen := 0
+var record := func(s) is
+    logLen := logLen + 1
+    log[logLen] := s
+end
+record("a"); record("b"); record("c")
+print log                           // expect [a, b, c]
+print logLen                        // expect 3
+print log[2] = "b", log[3] /= "b"   // expect true true    (string equality, Q5)
+
+// --- capture is by reference: the current value, not a snapshot ---
+
+var greeting := "hi"
+var greet := func => greeting
+greeting := "hello"
+print greet()                       // expect hello
+
+// --- memoised Fibonacci: a captured array as the cache ---
+
+var cache := []
+var fib := func(n) is
+    if n <= 2 then return 1 end
+    if not cache[n] is none then return cache[n] end
+    var v := fib(n - 1) + fib(n - 2)
+    cache[n] := v
+    return v
+end
+print fib(30)                       // expect 832040
+print fib(50)                       // expect 12586269025
+print cache[10]                     // expect 55
+
+// --- a function that returns a tuple of closures over one variable ---
+
+var makeAccount := func(opening) is
+    var balance := opening
+    var deposit := func(x) is balance := balance + x end
+    var withdraw := func(x) is
+        if x > balance then return false end
+        balance := balance - x
+        return true
+    end
+    var read := func => balance
+    return {deposit := deposit, withdraw := withdraw, read := read}
+end
+var acc := makeAccount(100)
+acc.deposit(50)
+print acc.read()                    // expect 150
+print acc.withdraw(200)             // expect false
+print acc.withdraw(70)              // expect true
+print acc.read()                    // expect 80
+
+print "== end =="

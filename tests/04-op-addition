@@ -1,0 +1,225 @@
+// ===========================================================================
+// Block 04 — Addition (+)
+// Description : 04-op-addition.md
+// Spec        : Language D.md §8.1 Addition
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 04 — Addition =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types --"
+// --------------------------------------------------------------------------
+
+// T-ADD-001  Integer + Integer -> Integer   expect 5
+print 2 + 3
+
+// T-ADD-002  Integer + Real -> Real         expect 5.5
+print 2 + 3.5
+
+// T-ADD-003  Real + Integer -> Real         expect 3.5
+print 1.5 + 2
+
+// T-ADD-004  Real + Real -> Real            expect 4.0
+print 1.5 + 2.5
+
+// T-ADD-005  String + String -> String      expect abcd
+print "ab" + "cd"
+
+// T-ADD-006  Array + Array -> Array         expect [1, 2, 3]
+print [1,2] + [3]
+
+// T-ADD-007  Tuple + Tuple -> Tuple         expect {a := 1, b := 2}
+print {a := 1} + {b := 2}
+
+// T-ADD-008  negative right operand          expect -1
+print 2 + -3
+
+// T-ADD-009  negative real                   expect -1.0
+print 1.5 + -2.5
+
+// T-ADD-010  quote style is not part of the type   expect abcd
+print 'ab' + "cd"
+
+// T-ADD-011  operand types are checked dynamically  expect 5
+if true then
+    var a := 2, b := 3
+    print a + b
+end
+
+// T-ADD-012  zero                            expect 0
+print 0 + 0
+
+// --------------------------------------------------------------------------
+print "-- 2xx semantics --"
+// --------------------------------------------------------------------------
+
+// T-ADD-201  repeats left to right           expect 6
+print 1 + 2 + 3
+
+// T-ADD-202  the result stays Real once widened   expect 4.5
+print 1 + 2.5 + 1
+
+// T-ADD-203  concatenation chains            expect abc
+print "a" + "b" + "c"
+
+// T-ADD-204  array concatenation chains      expect [1, 2, 3]
+print [1] + [2] + [3]
+
+// T-ADD-205  parentheses do not change it    expect 6
+print (1 + 2) + 3
+
+// T-ADD-206  * binds tighter than +          expect 14
+print 2 + 3 * 4
+
+// T-ADD-207  the spec's tuple-extension example   expect 3
+if true then
+    var t := {a := 1, b := 2}
+    t := t + {e := 3}
+    print t.e
+end
+
+// T-ADD-208  + produces a new value, it does not mutate   expect [1]
+if true then
+    var a := [1]
+    var b := a + [2]
+    print a
+end
+
+// --------------------------------------------------------------------------
+print "-- 4xx edge cases --"
+// --------------------------------------------------------------------------
+
+// T-ADD-401  expect []
+print [] + []
+
+// T-ADD-402  expect [1]
+print [] + [1]
+
+// T-ADD-403  expect [1]
+print [1] + []
+
+// T-ADD-404  the empty string is the identity   expect a
+print "" + "a"
+
+// T-ADD-405  sparse keys are renumbered on concatenation (Q9)   expect [1, 2]
+if true then
+    var t := []
+    t[10] := 1
+    print t + [2]
+end
+
+// T-ADD-407  unnamed elements concatenate positionally   expect {1, 2}
+print {1} + {2}
+
+// T-ADD-408  nesting is preserved, not flattened   expect [[1], [2]]
+print [ [1] ] + [ [2] ]
+
+// T-ADD-409  both sides walked in ascending key order   expect [b, a, b, a]
+if true then
+    var t := []
+    t[5] := "a"; t[2] := "b"
+    print t + t
+end
+
+print "== end of block 04 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// --- 1a. operand kinds + never accepts ---
+
+// T-ADD-101  runtime error: boolean is not an operand of +
+// print true + false
+
+// T-ADD-102  runtime error
+// print true + 1
+
+// T-ADD-103  runtime error
+// print 1 + true
+
+// T-ADD-104  runtime error: func is not an operand of +
+// var f := func => 0
+// print f + f
+
+// T-ADD-105  runtime error
+// var f := func => 0
+// print 1 + f
+
+// T-ADD-106  runtime error: none cannot act as an operand
+// var n
+// print n + 1
+
+// T-ADD-107  runtime error
+// var n
+// print 1 + n
+
+// T-ADD-108  runtime error
+// var n
+// print n + n
+
+// T-ADD-109  runtime error
+// print none + none
+
+// --- 1b. mismatched pairs of otherwise supported kinds ---
+
+// T-ADD-110  runtime error: no integer/string mixing
+// print 1 + "2"
+
+// T-ADD-111  runtime error
+// print "2" + 1
+
+// T-ADD-112  runtime error
+// print 1.5 + "s"
+
+// T-ADD-113  runtime error
+// print "s" + 1.5
+
+// T-ADD-114  runtime error
+// print "s" + true
+
+// T-ADD-115  runtime error
+// print 1 + [1]
+
+// T-ADD-116  runtime error
+// print [1] + 1
+
+// T-ADD-117  runtime error
+// print "s" + [1]
+
+// T-ADD-118  runtime error
+// print [1] + "s"
+
+// T-ADD-119  runtime error
+// print 1 + {a := 1}
+
+// T-ADD-120  runtime error
+// print {a := 1} + 1
+
+// T-ADD-121  runtime error: array and tuple do not mix
+// print [1] + {a := 1}
+
+// T-ADD-122  runtime error
+// print {a := 1} + [1]
+
+// T-ADD-123  runtime error
+// print "s" + {a := 1}
+
+// T-ADD-124  runtime error
+// print true + [1]
+
+// --- 4xx / 9xx decided negatives ---
+
+// T-ADD-406  runtime error: duplicate names on tuple concatenation (Q10)
+// print {a := 1} + {a := 2}
+
+// T-ADD-903  runtime error: integer overflow (Q27)
+// print 9223372036854775807 + 1

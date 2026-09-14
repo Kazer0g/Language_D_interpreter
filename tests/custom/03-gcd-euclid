@@ -1,0 +1,68 @@
+// ===========================================================================
+// Custom 03 — Greatest Common Divisor, and Least Common Multiple
+// Exercises: while loop, if/else, integer division, exit
+//
+// The language has no modulo operator, so this uses the SUBTRACTION form of
+// Euclid's algorithm. The remainder form would need `a - (a / b) * b`, which
+// is exercised in 04-primes and 13-fizzbuzz instead.
+// ===========================================================================
+
+print "== GCD by subtraction =="
+
+// --- gcd(48, 18) = 6 ---
+
+var a := 48, b := 18
+while a /= b loop
+    if a > b then
+        a := a - b
+    else
+        b := b - a
+    end
+end
+print "gcd(48, 18) =", a          // expect 6
+
+// --- gcd(1071, 462) = 21 ---
+
+var x := 1071, y := 462
+while x /= y loop
+    if x > y then x := x - y else y := y - x end
+end
+print "gcd(1071, 462) =", x       // expect 21
+
+// --- gcd of a whole array, folded left ---
+
+var nums := [24, 36, 60, 84]
+var g := 0
+for v in nums loop
+    if g = 0 then
+        g := v
+    else
+        var p := g, q := v
+        while p /= q loop
+            if p > q then p := p - q else q := q - p end
+        end
+        g := p
+    end
+end
+print "gcd of the array =", g     // expect 12
+
+// --- lcm(a, b) = a * b / gcd(a, b) ---
+
+var m := 12, n := 18
+var p := m, q := n
+while p /= q loop
+    if p > q then p := p - q else q := q - p end
+end
+print "lcm(12, 18) =", m * n / p  // expect 36
+
+// --- the remainder form, using integer division for the remainder ---
+
+var u := 1071, v := 462
+while v /= 0 loop
+    var r := u - (u / v) * v
+    u := v
+    v := r
+end
+print "gcd(1071, 462) again =", u // expect 21
+
+print "== end =="

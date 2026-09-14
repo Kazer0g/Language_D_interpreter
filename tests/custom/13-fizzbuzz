@@ -1,0 +1,75 @@
+// ===========================================================================
+// Custom 13 — FizzBuzz
+// Exercises: divisibility without a modulo operator, nested if/else chains,
+//            boolean variables, the short if form
+//
+// Divisibility test: d divides n exactly when d * (n / d) = n, because
+// Integer / Integer rounds down (Language D.md §8.4).
+// ===========================================================================
+
+print "== FizzBuzz, 1 to 20 =="
+
+for i in 1..20 loop
+    var by3 := 3 * (i / 3) = i
+    var by5 := 5 * (i / 5) = i
+    if by3 and by5 then
+        print "FizzBuzz"
+    else
+        if by3 then
+            print "Fizz"
+        else
+            if by5 then
+                print "Buzz"
+            else
+                print i
+            end
+        end
+    end
+end
+// expect
+//  1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz
+//  11 Fizz 13 14 FizzBuzz 16 17 Fizz 19 Buzz
+
+print "== Counts =="
+
+// --- how many of each, over 1..100 ---
+
+var fizz := 0, buzz := 0, both := 0, plain := 0
+for i in 1..100 loop
+    var by3 := 3 * (i / 3) = i
+    var by5 := 5 * (i / 5) = i
+    if by3 and by5 then
+        both := both + 1
+    else
+        if by3 then
+            fizz := fizz + 1
+        else
+            if by5 then buzz := buzz + 1 else plain := plain + 1 end
+        end
+    end
+end
+print "Fizz only", fizz           // expect 27
+print "Buzz only", buzz           // expect 14
+print "FizzBuzz", both            // expect 6
+print "plain numbers", plain      // expect 53
+print "total", fizz + buzz + both + plain            // expect 100
+
+print "== The divisibility test on its own =="
+
+// --- 12 is divisible by 1, 2, 3, 4, 6 and 12 ---
+
+for d in 1..12 loop
+    if d * (12 / d) = 12 => print d
+end
+// expect 1 2 3 4 6 12
+
+// --- and the xor form: divisible by exactly one of 2 and 3 ---
+
+for i in 1..12 loop
+    var by2 := 2 * (i / 2) = i
+    var by3 := 3 * (i / 3) = i
+    if by2 xor by3 => print i
+end
+// expect 2 3 4 8 9 10
+
+print "== end =="

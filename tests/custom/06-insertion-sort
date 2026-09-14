@@ -1,0 +1,74 @@
+// ===========================================================================
+// Custom 06 — Insertion sort and selection sort
+// Exercises: while loop with a compound exit condition, nested if/else,
+//            in-place shifting
+//
+// Note on the inner loop: the natural condition is
+//     while j >= 1 and a[j] > key loop
+// but `and` does not short-circuit (Q29): both operands are always evaluated,
+// so `a[0]` is read when j reaches 0. That reads as none (Q8), and
+// `none > key` is a runtime error. The loop below therefore uses an explicit
+// flag and tests the guard and the element in two steps. That is the way to
+// write this in Language D.
+// ===========================================================================
+
+print "== Insertion sort =="
+
+var a := [5, 2, 9, 1, 5, 6, 3]
+
+var n := 0
+for v in a loop
+    n := n + 1
+end
+
+for i in 2..n loop
+    var key := a[i]
+    var j := i - 1
+    var placed := false
+    while not (placed) loop
+        if j < 1 then
+            placed := true
+        else
+            if a[j] > key then
+                a[j + 1] := a[j]
+                j := j - 1
+            else
+                placed := true
+            end
+        end
+    end
+    a[j + 1] := key
+end
+
+for v in a loop
+    print v
+end
+// expect 1 2 3 5 5 6 9
+
+print "== Selection sort =="
+
+var b := [64, 25, 12, 22, 11]
+
+var m := 0
+for v in b loop
+    m := m + 1
+end
+
+for i in 1..m - 1 loop
+    var least := i
+    for j in i + 1 .. m loop
+        if b[j] < b[least] => least := j
+    end
+    if least /= i then
+        var tmp := b[i]
+        b[i] := b[least]
+        b[least] := tmp
+    end
+end
+
+for v in b loop
+    print v
+end
+// expect 11 12 22 25 64
+
+print "== end =="

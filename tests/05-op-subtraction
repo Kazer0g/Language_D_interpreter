@@ -1,0 +1,160 @@
+// ===========================================================================
+// Block 05 — Subtraction (-)
+// Description : 05-op-subtraction.md
+// Spec        : Language D.md §8.2 Subtraction
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+// Section 1b is the direct counterpart of the cases addition allows.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 05 — Subtraction =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types --"
+// --------------------------------------------------------------------------
+
+// T-SUB-001  Integer - Integer -> Integer   expect 2
+print 5 - 3
+
+// T-SUB-002  Integer - Real -> Real         expect 1.5
+print 5 - 3.5
+
+// T-SUB-003  Real - Integer -> Real         expect 2.5
+print 5.5 - 3
+
+// T-SUB-004  Real - Real -> Real            expect 2.0
+print 5.5 - 3.5
+
+// T-SUB-005  negative result                expect -2
+print 3 - 5
+
+// T-SUB-006  zero result                    expect 0
+print 5 - 5
+
+// T-SUB-007  operand types are checked dynamically   expect 2
+if true then
+    var a := 5, b := 3
+    print a - b
+end
+
+// T-SUB-008  binary minus then unary minus  expect 8
+print 5 - -3
+
+// --------------------------------------------------------------------------
+print "-- 2xx semantics --"
+// --------------------------------------------------------------------------
+
+// T-SUB-201  left associative, not 10 - (3 - 2) = 9   expect 5
+print 10 - 3 - 2
+
+// T-SUB-202  + and - share a level, left to right     expect 9
+print 10 - 3 + 2
+
+// T-SUB-203  parentheses override                     expect 9
+print 10 - (3 - 2)
+
+// T-SUB-204  * binds tighter                          expect 4
+print 10 - 2 * 3
+
+// T-SUB-205  the result stays Real once widened       expect 1.5
+print 5 - 2.5 - 1
+
+// T-SUB-206  chained                                  expect -8
+print 1 - 2 - 3 - 4
+
+// --------------------------------------------------------------------------
+print "-- 9xx decided --"
+// --------------------------------------------------------------------------
+
+// T-SUB-902  IEEE double arithmetic, shortest round-trip rendering (Q28)
+//            expect 0.19999999999999998
+print 0.3 - 0.1
+
+// T-SUB-903  a whole-valued real still prints with a dot   expect 2.0
+print 2.5 - 0.5
+
+print "== end of block 05 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// --- 1a. operand kinds - never accepts ---
+
+// T-SUB-101  runtime error: boolean is not an operand of -
+// print true - false
+
+// T-SUB-102  runtime error
+// print true - 1
+
+// T-SUB-103  runtime error
+// print 1 - true
+
+// T-SUB-104  runtime error
+// var f := func => 0
+// print f - f
+
+// T-SUB-105  runtime error
+// var f := func => 0
+// print 1 - f
+
+// T-SUB-106  runtime error: none cannot act as an operand
+// var n
+// print n - 1
+
+// T-SUB-107  runtime error
+// var n
+// print 1 - n
+
+// T-SUB-108  runtime error
+// var n
+// print n - n
+
+// --- 1b. counterparts of the cases addition allows ---
+
+// T-SUB-110  runtime error: no string subtraction   (cf. T-ADD-005)
+// print "ab" - "b"
+
+// T-SUB-111  runtime error: no array subtraction    (cf. T-ADD-006)
+// print [1,2] - [2]
+
+// T-SUB-112  runtime error: no tuple subtraction    (cf. T-ADD-007)
+// print {a := 1, b := 2} - {b := 2}
+
+// --- 1c. mismatched pairs ---
+
+// T-SUB-120  runtime error
+// print 1 - "2"
+
+// T-SUB-121  runtime error
+// print "2" - 1
+
+// T-SUB-122  runtime error
+// print 1.5 - "s"
+
+// T-SUB-123  runtime error
+// print 1 - [1]
+
+// T-SUB-124  runtime error
+// print [1] - 1
+
+// T-SUB-125  runtime error
+// print 1 - {a := 1}
+
+// T-SUB-126  runtime error
+// print {a := 1} - 1
+
+// T-SUB-127  runtime error
+// print [1] - {a := 1}
+
+// T-SUB-128  runtime error
+// print true - [1]
+
+// T-SUB-901  runtime error: integer underflow, 64-bit signed (Q27)
+// print -9223372036854775807 - 2

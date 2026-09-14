@@ -1,0 +1,188 @@
+// ===========================================================================
+// Block 02 — Declarations and Scope
+// Description : 02-declarations-and-scope.md
+// Spec        : Language D.md §3.1 Variable Declaration, §3.2 Scope
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2), so
+// `if true then ... end` isolates each test's declarations.
+// ===========================================================================
+
+print "== Block 02 — Declarations and Scope =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx valid declarations --"
+// --------------------------------------------------------------------------
+
+// T-DECL-001  expect 1
+if true then
+    var a := 1
+    print a
+end
+
+// T-DECL-002  expect true   (no initial value means none)
+if true then
+    var a
+    print a is none
+end
+
+// T-DECL-003  expect 3   (two definitions in one declaration)
+if true then
+    var a := 1, b := 2
+    print a + b
+end
+
+// T-DECL-004  expect true   (mixed initialised and not)
+if true then
+    var a := 1, b, c := 3
+    print b is none
+end
+
+// T-DECL-005  expect 7   (the initial value is any expression)
+if true then
+    var a := 1 + 2 * 3
+    print a
+end
+
+// T-DECL-006  expect 2   (an earlier variable is visible)
+if true then
+    var a := 1
+    var b := a + 1
+    print b
+end
+
+// T-DECL-007  expect 1 then 2   (a declaration may sit in any position)
+print 1
+if true then
+    var a := 2
+    print a
+end
+
+// T-DECL-008  expect 2   (a function value as the initialiser)
+if true then
+    var f := func(x) => x + 1
+    print f(1)
+end
+
+// --------------------------------------------------------------------------
+print "-- 2xx scope, shadowing, dynamic type --"
+// --------------------------------------------------------------------------
+
+// T-DECL-201  expect 2 then 1   (the nested x hides the outer one)
+if true then
+    var x := 1
+    if true then
+        var x := 2
+        print x
+    end
+    print x
+end
+
+// T-DECL-202  expect 1   (an enclosing variable is visible in a nested scope)
+if true then
+    var x := 1
+    if true then
+        print x
+    end
+end
+
+// T-DECL-203  expect 2   (assignment without var reaches the enclosing variable)
+if true then
+    var x := 1
+    if true then
+        x := 2
+    end
+    print x
+end
+
+// T-DECL-205  expect 1   (a loop body is a scope)
+if true then
+    var x := 1
+    for i in [1] loop
+        var x := 9
+    end
+    print x
+end
+
+// T-DECL-206  expect 9 then 1   (a function body is a scope)
+if true then
+    var x := 1
+    var f := func is var x := 9; return x end
+    print f(), x
+end
+
+// T-DECL-208  expect true   (the type of a variable is not fixed)
+if true then
+    var a := 1
+    a := "s"
+    print a is string
+end
+
+// T-DECL-209  expect true   (a variable can take a value of any type)
+if true then
+    var a := 1
+    a := 1.5; a := true; a := [1]; a := {x := 1}; a := func => 0
+    print a is func
+end
+
+// T-DECL-210  expect 2   (the initialiser sees the outer x, Q25)
+if true then
+    var x := 1
+    if true then var x := x + 1; print x end
+end
+
+// T-DECL-211  expect 9   (declaring from an array aliases it, Q26)
+if true then
+    var a := [1], b := a
+    b[1] := 9
+    print a[1]
+end
+
+print "== end of block 02 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-DECL-101  runtime error: only one variable with a given name per scope (Q24)
+// var a := 1
+// var a := 2
+
+// T-DECL-102  runtime error: duplicate name inside one declaration
+// var a := 1, a := 2
+
+// T-DECL-103  runtime error: a variable is active only from its declaration point
+// print a
+// var a := 1
+
+// T-DECL-104  syntax error: at least one VariableDefinition is required
+// var
+
+// T-DECL-105  syntax error: := requires an expression
+// var a :=
+
+// T-DECL-106  syntax error: trailing comma
+// var a := 1,
+
+// T-DECL-107  runtime error: undeclared identifier
+// print b
+
+// T-DECL-108  syntax error: a declared name cannot start with a digit (Q22);
+//              caught before b is ever looked at, even though b is undeclared too
+// var 1a := b
+
+// T-DECL-204  runtime error: y is dead after its scope ends
+// if true then var y := 1 end
+// print y
+
+// T-DECL-207  runtime error: the loop variable's scope is the loop body
+// for i in [1,2] loop var t := i end
+// print i
+
+// T-DECL-904  runtime error: y is undeclared while its own initialiser runs (Q25)
+// var y := y

@@ -1,0 +1,308 @@
+// ===========================================================================
+// Block 13 — Tuples
+// Description : 13-type-tuples.md
+// Spec        : Language D.md §7.6 Tuple, §6 References
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 13 — Tuples =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx literals and access --"
+// --------------------------------------------------------------------------
+
+// T-TUP-001  access by name      expect 1
+if true then
+    var t := {a := 1, b := 2}
+    print t.a
+end
+
+// T-TUP-002  access by position, starting at one   expect 2
+if true then
+    var t := {a := 1, b := 2}
+    print t.2
+end
+
+// T-TUP-003  name and position address the same element   expect 2 then 2
+if true then
+    var t := {a := 1, b := 2}
+    print t.b, t.2
+end
+
+// T-TUP-004  all elements unnamed   expect 1
+if true then
+    var t := {1, 2, 3}
+    print t.1
+end
+
+// T-TUP-005  named and unnamed in any order   expect 1 2 s
+if true then
+    var t := {1, a := 2, "s"}
+    print t.1, t.a, t.3
+end
+
+// T-TUP-006  the spec's own literal            expect sss
+if true then
+    var t := {a := 5, b := "sss", 12.34}
+    print t.b
+end
+
+// T-TUP-007  an element is any expression      expect 3
+if true then
+    var c := 1, d := 2
+    var t := {a := 1, b := 2, c + d}
+    print t.3
+end
+
+// T-TUP-008  the { } type indicator            expect true
+if true then
+    var t := {x := 1}
+    print t is {}
+end
+
+// T-TUP-009  an array inside a tuple           expect 2
+if true then
+    var t := {a := [1,2]}
+    print t.a[2]
+end
+
+// T-TUP-010  nested tuples                     expect 7
+if true then
+    var t := {a := {b := 7}}
+    print t.a.b
+end
+
+// T-TUP-011  a function inside a tuple         expect 9
+if true then
+    var t := {f := func => 9}
+    print t.f()
+end
+
+// T-TUP-012  arbitrary element types           expect 2.5
+if true then
+    var t := {a := 1, b := 2.5, c := "s", d := true}
+    print t.b
+end
+
+// --------------------------------------------------------------------------
+print "-- 2xx immutability and extension --"
+// --------------------------------------------------------------------------
+
+// T-TUP-201  the spec's own extension example   expect 3
+if true then
+    var t := {a := 1, b := 2, 3}
+    t := t + {e := 3}
+    print t.e
+end
+
+// T-TUP-202  positions continue across the concatenation   expect 1 then 2
+if true then
+    var t := {a := 1}
+    t := t + {b := 2}
+    print t.1, t.2
+end
+
+// T-TUP-203  + produces a new tuple            expect true then 2
+if true then
+    var t := {a := 1}
+    var u := t + {b := 2}
+    print t is {}, u.b
+end
+
+// T-TUP-204  changing a value, not the structure (Q11)   expect 5
+if true then
+    var t := {a := 1}
+    t.a := 5
+    print t.a
+end
+
+// T-TUP-206  positional assignment, same rule   expect 5
+if true then
+    var t := {a := 1}
+    t.1 := 5
+    print t.a
+end
+
+// T-TUP-208  unnamed elements concatenate positionally   expect {1, 2}
+print {1} + {2}
+
+// T-TUP-210  the element may change type; only the structure is fixed   expect true
+if true then
+    var t := {a := 1}
+    t.a := "s"
+    print t.a is string
+end
+
+// T-TUP-211  positions continue across the join   expect 1 2 3
+if true then
+    var t := {a := 1, b := 2}
+    var u := t + {c := 3}
+    print u.1, u.2, u.3
+end
+
+// --------------------------------------------------------------------------
+print "-- 3xx tuples in other constructs --"
+// --------------------------------------------------------------------------
+
+// T-TUP-301  a single loop expression may be a tuple   expect 3
+if true then
+    var t := {a := 1, b := 2}
+    var sum := 0
+    for v in t loop
+        sum := sum + v
+    end
+    print sum
+end
+
+// T-TUP-302  a tuple passed as an argument      expect 4
+if true then
+    var f := func(t) => t.a
+    print f({a := 4})
+end
+
+// T-TUP-303  a tuple returned from a function   expect 4
+if true then
+    var f := func => {a := 4}
+    print f().a
+end
+
+// T-TUP-304  chained accessors                  expect 2
+if true then
+    var a := [ {x := 1}, {x := 2} ]
+    print a[2].x
+end
+
+// T-TUP-305  an element is an ordinary operand  expect 2
+if true then
+    var t := {a := 1}
+    print t.a + 1
+end
+
+// T-TUP-306  positional order, names not visible (Q13)   expect 1 2 3
+for v in {a := 1, 2, b := 3} loop print v end
+
+// --------------------------------------------------------------------------
+print "-- 4xx edge cases --"
+// --------------------------------------------------------------------------
+
+// T-TUP-401  single unnamed element   expect 1
+if true then
+    var t := {1}
+    print t.1
+end
+
+// T-TUP-402  single named element     expect 1
+if true then
+    var t := {a := 1}
+    print t.a
+end
+
+// T-TUP-403  a tuple whose only element is a tuple   expect 1
+if true then
+    var t := { {a := 1} }
+    print t.1.a
+end
+
+// T-TUP-404  extending a copy leaves the original a tuple   expect true
+if true then
+    var t := {a := 1}, u := t
+    u := u + {b := 2}
+    print t is {}
+end
+
+// T-TUP-405  rendering of a tuple (Q15)   expect {a := 1}
+if true then
+    var t := {a := 1}
+    print t
+end
+
+// T-TUP-406  both access forms agree   expect 1 2 1 2
+if true then
+    var t := {a := 1, b := 2}
+    print t.a, t.b, t.1, t.2
+end
+
+// T-TUP-407  unnamed as the value, named as name := value   expect {1, b := 2.0, s}
+print {1, b := 2.0, "s"}
+
+// T-TUP-408  tuples alias on assignment (Q26)   expect 5
+if true then
+    var t := {a := 1}, u := t
+    u.a := 5
+    print t.a
+end
+
+print "== end of block 13 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-TUP-101  runtime error: element names must be unique within the tuple (Q24)
+// var t := {a := 1, a := 2}
+
+// T-TUP-102  runtime error: no such element name
+// var t := {a := 1}
+// print t.b
+
+// T-TUP-103  runtime error: position beyond the fixed size
+// var t := {a := 1}
+// print t.2
+
+// T-TUP-104  runtime error: numbering starts with one
+// var t := {a := 1}
+// print t.0
+
+// T-TUP-105  runtime error: `. i` reads i as an element NAME, not a variable
+// var t := {a := 1}
+// var i := 1
+// print t.i
+
+// T-TUP-106  syntax error: the position must be an IntegerLiteral
+// var t := {a := 1}
+// print t.(1)
+
+// T-TUP-107  syntax error
+// var t := {a := 1}
+// print t.1.5
+
+// T-TUP-108  syntax error: the grammar requires at least one TupleElement
+// var t := {}
+
+// T-TUP-109  syntax error: trailing comma
+// var t := {a := 1,}
+
+// T-TUP-110  runtime error: a tuple is accessed with . not [ ]
+// var t := {a := 1}
+// print t[1]
+
+// T-TUP-111  runtime error: dot access on a non-tuple
+// var a := 1
+// print a.b
+
+// T-TUP-112  syntax error: the separator is := not =
+// var t := {a = 1}
+
+// T-TUP-113  syntax error: a tuple element name must be an Identifier;
+//            1 lexes as INTEGER, never as IDENT (Q22) — contrast with
+//            T-TUP-004 below, where {1, 2, 3} has three UNNAMED elements
+// var t := {1 := 5}
+
+// T-TUP-205  runtime error: this would modify the structure (Q11)
+// var t := {a := 1}
+// t.b := 5
+
+// T-TUP-207  runtime error: duplicate names after concatenation (Q10)
+// var t := {a := 1}
+// print t + {a := 2}
+
+// T-TUP-209  runtime error: position 2 does not exist, no growth by assignment
+// var t := {a := 1}
+// t.2 := 5

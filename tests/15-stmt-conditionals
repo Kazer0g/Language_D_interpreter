@@ -1,0 +1,199 @@
+// ===========================================================================
+// Block 15 — Conditionals (if / if =>)
+// Description : 15-stmt-conditionals.md
+// Spec        : Language D.md §4.2 If, §4.3 IfShort, §4.4 Body
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 15 — Conditionals =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx full form --"
+// --------------------------------------------------------------------------
+
+// T-IF-001  expect y
+if true then print "y" end
+
+// T-IF-002  expect no output
+if false then print "y" end
+
+// T-IF-003  expect y
+if true then print "y" else print "n" end
+
+// T-IF-004  expect n
+if false then print "y" else print "n" end
+
+// T-IF-005  expect positive
+if true then
+    var n := 5
+    if n > 0 then
+        print "positive"
+    else
+        print "non-positive"
+    end
+end
+
+// T-IF-006  the condition is any expression   expect y
+if 1 < 2 and 3 < 4 then print "y" end
+
+// T-IF-007  a variable as the condition       expect y
+if true then
+    var b := true
+    if b then print "y" end
+end
+
+// T-IF-008  several statements in the body    expect 1
+if true then var a := 1; print a end
+
+// T-IF-009  newline-separated body            expect 1 then 2
+if true then
+    print 1
+    print 2
+end
+
+// --------------------------------------------------------------------------
+print "-- 2xx short form if => --"
+// --------------------------------------------------------------------------
+
+// T-IF-201  expect y
+if true then
+    var i := 100
+    if i = 100 => print "y"
+end
+
+// T-IF-202  expect no output
+if false => print "y"
+
+// T-IF-203  the spec's own example   expect 100
+if true then
+    var i := 0
+    loop
+        i := i + 1
+        if i = 100 => exit
+    end
+    print i
+end
+
+// T-IF-206  the short-form body runs to the end of the line (Q36)   expect 1
+if true then
+    if true => var a := 1; print a
+end
+
+// T-IF-207  a newline ends the short-form body   expect 1 then 2
+if true => print 1
+print 2
+
+// T-IF-208  both statements belong to the body   expect no output
+if false => print 1; print 2
+
+// T-IF-209  only the next line is outside the body   expect 3
+if false => print 1; print 2
+print 3
+
+// T-IF-210  end on the same line closes the outer if   expect 1 then 2
+if true then if true => print 1 end
+print 2
+
+// T-IF-211  else on the same line ends the short body   expect 2
+if true then if false => print 1 else print 2 end
+
+// T-IF-212  nested short forms on one line   expect 1
+if true => if true => print 1
+
+// T-IF-112  the branch not taken is not evaluated   expect no output
+if false then print 1 / 0 end
+
+// --------------------------------------------------------------------------
+print "-- 3xx nesting and structure --"
+// --------------------------------------------------------------------------
+
+// T-IF-301  nested full form   expect y
+if true then if true then print "y" end end
+
+// T-IF-302  the inner else binds to the inner if   expect n
+if true then if false then print "y" else print "n" end end
+
+// T-IF-303  else-if by nesting   expect 2
+if false then print 1 else if true then print 2 end end
+
+// T-IF-304  short form nested inside the full form   expect y
+if true then if true => print "y" end
+
+// T-IF-306  assignment reaches the enclosing variable   expect 2
+if true then
+    var x := 1
+    if true then x := 2 end
+    print x
+end
+
+// T-IF-307  exit inside a branch inside a loop   expect done
+for i in [1,2] loop if i = 2 => exit end
+print "done"
+
+// T-IF-308  a trailing separator before else   expect 1
+if true then
+    print 1;
+else
+    print 2
+end
+
+print "== end of block 15 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-IF-105  syntax error: then is required
+// if true print "y" end
+
+// T-IF-106  syntax error: end is required
+// if true then print "y"
+
+// T-IF-107  syntax error: a condition is required
+// if then print "y" end
+
+// T-IF-110  syntax error: at most one else
+// if true then print 1 else print 2 else print 3 end
+
+// T-IF-204  syntax error: the short form has no else
+// if true => print "y" else print "n"
+
+// T-IF-205  syntax error: the short form has no end
+// if true => print "y" end
+
+// T-IF-305  runtime error: a branch body is a scope, x is dead after it
+// if true then var x := 1 end
+// print x
+
+// --- 1xx non-boolean conditions: runtime error, no truthiness (Q34) ---
+
+// T-IF-101  runtime error
+// if 1 then print "y" end
+
+// T-IF-102  runtime error: 0 is not false
+// if 0 then print "y" end
+
+// T-IF-103  runtime error
+// if "s" then print "y" end
+
+// T-IF-104  runtime error: none cannot act as an operand
+// var n
+// if n then print "y" end
+
+// T-IF-111  runtime error: an array is not a boolean
+// if [true] then print "y" end
+
+// --- 1xx empty bodies: syntax error (Q35) ---
+
+// T-IF-108  syntax error: a Body requires at least one Statement
+// if true then else print "n" end
+
+// T-IF-109  syntax error: same for the else branch
+// if true then print 1 else end

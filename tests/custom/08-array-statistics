@@ -1,0 +1,85 @@
+// ===========================================================================
+// Custom 08 — Array statistics
+// Exercises: aggregate iteration, running min/max, integer vs real division,
+//            mixed-type arithmetic (implicit integer -> real widening)
+//
+// The average is the interesting part: `sum / count` with two integers rounds
+// down (Language D.md §8.4), so the real average needs one real operand.
+// Both are printed here so the difference is visible.
+// ===========================================================================
+
+print "== Array statistics =="
+
+var a := [12, 7, 25, 3, 18, 7, 40, 11]
+
+// --- count ---
+
+var n := 0
+for v in a loop
+    n := n + 1
+end
+print "count", n                  // expect 8
+
+// --- sum ---
+
+var sum := 0
+for v in a loop
+    sum := sum + v
+end
+print "sum", sum                  // expect 123
+
+// --- min and max, seeded from the first element ---
+
+var least := a[1], most := a[1]
+for v in a loop
+    if v < least => least := v
+    if v > most => most := v
+end
+print "min", least                // expect 3
+print "max", most                 // expect 40
+
+// --- range ---
+
+print "range", most - least       // expect 37
+
+// --- average: integer division rounds down ---
+
+print "average, integer division", sum / n            // expect 15
+
+// --- average: one real operand keeps the fraction ---
+
+var total := 0.0
+for v in a loop
+    total := total + v
+end
+print "average, real division", total / n             // expect 15.375
+
+// --- the result types differ, and `is` can prove it ---
+
+var avgInt := sum / n
+var avgReal := total / n
+print avgInt is int, avgReal is real                  // expect true true
+
+// --- count how many are above the integer average ---
+
+var above := 0
+for v in a loop
+    if v > avgInt => above := above + 1
+end
+print "above average", above      // expect 3
+
+// --- sum of squares, and the sum of the even values ---
+
+var squares := 0
+for v in a loop
+    squares := squares + v * v
+end
+print "sum of squares", squares   // expect 2921
+
+var evens := 0
+for v in a loop
+    if 2 * (v / 2) = v => evens := evens + v
+end
+print "sum of the even values", evens                 // expect 70
+
+print "== end =="

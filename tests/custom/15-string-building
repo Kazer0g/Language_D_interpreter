@@ -1,0 +1,130 @@
+// ===========================================================================
+// Custom 15 — Building strings
+// Exercises: String + String concatenation in a loop, strings in arrays and
+//            tuples, both quote styles, strings as function arguments and
+//            results
+//
+// Deliberately absent: any conversion between a number and a string — there
+// is none (T-CONV-401/402). String equality with = and /= exists (Q5) but is
+// not needed here; ordering of strings does not exist. A string can be built,
+// stored, passed, printed and compared for equality, and that is all.
+// ===========================================================================
+
+print "== Repeat =="
+
+// --- a rule of 20 dashes ---
+
+var line := ""
+for i in 1..20 loop
+    line := line + "-"
+end
+print line                        // expect --------------------
+
+// --- repeat as a function, taking everything it needs as parameters ---
+
+var repeat := func(s, times) is
+    var out := ""
+    for i in 1..times loop
+        out := out + s
+    end
+    return out
+end
+
+print repeat("ab", 3)             // expect ababab
+print repeat("*", 5)              // expect *****
+print repeat("x", 0)              // expect an empty line
+// Note: times = 0 makes the loop header 1..0, which runs zero times (Q37),
+// so the result is the empty string.
+print repeat("-=", 4)             // expect -=-=-=-=
+
+print "== Concatenation =="
+
+// --- both quote styles produce the same type ---
+
+var greeting := "Hello" + ", " + 'world' + "!"
+print greeting                    // expect Hello, world!
+print greeting is string          // expect true
+
+// --- the empty string is the identity ---
+
+print "" + "a" + ""               // expect a
+
+// --- concatenation chains left to right ---
+
+var acc := ""
+var parts := ["D", " ", "is", " ", "dynamic"]
+for p in parts loop
+    acc := acc + p
+end
+print acc                         // expect D is dynamic
+
+print "== Join =="
+
+// --- join with a separator, skipping the leading one ---
+
+var join := func(items, n, sep) is
+    var out := ""
+    for i in 1..n loop
+        if i = 1 then
+            out := out + items[i]
+        else
+            out := out + sep + items[i]
+        end
+    end
+    return out
+end
+
+var words := ["alpha", "beta", "gamma", "delta"]
+print join(words, 4, ", ")        // expect alpha, beta, gamma, delta
+print join(words, 4, " | ")       // expect alpha | beta | gamma | delta
+print join(words, 1, ", ")        // expect alpha
+
+print "== Strings in composites =="
+
+// --- an array of strings ---
+
+var names := ["Ann", "Boris", "Cara"]
+for s in names loop
+    print s
+end
+// expect Ann Boris Cara
+
+// --- a tuple with string fields ---
+
+var record := {first := "Ada", last := "Lovelace", year := 1815}
+print record.first + " " + record.last               // expect Ada Lovelace
+print record.year                                    // expect 1815
+print record.first is string, record.year is int     // expect true true
+
+// --- array concatenation of string arrays ---
+
+var more := names + ["Dmitri"]
+for s in more loop
+    print s
+end
+// expect Ann Boris Cara Dmitri
+
+print "== A framed banner =="
+
+// --- build a box around a caption ---
+
+var caption := "Language D"
+var width := 0
+// the width has to be tracked by hand: there is no length operation on a
+// string, just as there is none on an array (T-ARR-903)
+width := 10
+
+var bar := ""
+for i in 1..width + 4 loop
+    bar := bar + "="
+end
+
+print bar
+print "| " + caption + " |"
+print bar
+// expect
+// ==============
+// | Language D |
+// ==============
+
+print "== end =="

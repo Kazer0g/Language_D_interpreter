@@ -1,0 +1,271 @@
+// ===========================================================================
+// Block 10 — Logical Operations (and or xor not)
+// Description : 10-op-logical.md
+// Spec        : Language D.md §8.7 Logical operations, §8.8 Unary negation
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Note: the grammar puts or, and and xor at ONE precedence level, so
+// `true or false and false` groups as `(true or false) and false` = false.
+// That is unusual and is flagged as T-LOG-902; T-LOG-201 encodes it.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 10 — Logical Operations =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx and: full truth table --"
+// --------------------------------------------------------------------------
+
+// T-LOG-001  expect true
+print true and true
+
+// T-LOG-002  expect false
+print true and false
+
+// T-LOG-003  expect false
+print false and true
+
+// T-LOG-004  expect false
+print false and false
+
+// --------------------------------------------------------------------------
+print "-- 01x or: full truth table --"
+// --------------------------------------------------------------------------
+
+// T-LOG-011  expect true
+print true or true
+
+// T-LOG-012  expect true
+print true or false
+
+// T-LOG-013  expect true
+print false or true
+
+// T-LOG-014  expect false
+print false or false
+
+// --------------------------------------------------------------------------
+print "-- 02x xor: full truth table --"
+// --------------------------------------------------------------------------
+
+// T-LOG-021  expect false
+print true xor true
+
+// T-LOG-022  expect true
+print true xor false
+
+// T-LOG-023  expect true
+print false xor true
+
+// T-LOG-024  expect false
+print false xor false
+
+// --------------------------------------------------------------------------
+print "-- 03x result type and dynamic operands --"
+// --------------------------------------------------------------------------
+
+// T-LOG-031  the result is always boolean   expect true
+if true then
+    var r := true and false
+    print r is bool
+end
+
+// T-LOG-032  operand types are checked dynamically   expect true
+if true then
+    var a := true, b := false
+    print a or b
+end
+
+// T-LOG-033  comparison results are valid operands   expect true
+print (1 < 2) and (3 < 4)
+
+// --------------------------------------------------------------------------
+print "-- 2xx precedence and associativity --"
+// --------------------------------------------------------------------------
+
+// T-LOG-201  one level, left to right: (true or false) and false (Q30)   expect false
+print true or false and false
+
+// T-LOG-202  left to right: (true and false) or true               expect true
+print true and false or true
+
+// T-LOG-203  parentheses override                                  expect true
+print true or (false and false)
+
+// T-LOG-204  comparison binds tighter than the logical level       expect false
+print 1 < 2 and 3 > 4
+
+// T-LOG-205  chained                                               expect false
+print true and true and false
+
+// T-LOG-206  mixed operators at one level, left to right           expect true
+print false xor true or false
+
+// --------------------------------------------------------------------------
+print "-- 4xx evaluation order: no short-circuiting (Q29) --"
+// --------------------------------------------------------------------------
+
+// T-LOG-401  f is called although the left operand decides   expect false then 1
+if true then
+    var c := 0
+    var f := func is c := c + 1; return false end
+    print false and f()
+    print c
+end
+
+// T-LOG-403  the same for or                                  expect true then 1
+if true then
+    var c := 0
+    var f := func is c := c + 1; return true end
+    print true or f()
+    print c
+end
+
+// T-LOG-405  left operand first, then right                   expect true then 2
+if true then
+    var c := 0
+    var f := func is c := c + 1; return true end
+    print f() and f()
+    print c
+end
+
+// --------------------------------------------------------------------------
+print "-- 5xx unary negation: not --"
+// --------------------------------------------------------------------------
+
+// T-LOG-501  expect false
+print not true
+
+// T-LOG-502  expect true
+print not false
+
+// T-LOG-503  expect true
+print not (true and false)
+
+// T-LOG-504  the result is boolean   expect true
+if true then
+    var r := not true
+    print r is bool
+end
+
+// T-LOG-514  a parenthesised comparison is a valid operand   expect false
+print not (1 < 2)
+
+// T-LOG-515  not on a bare reference (Q4)   expect false
+if true then
+    var b := true
+    print not b
+end
+
+// T-LOG-516  the parenthesised form          expect false
+if true then
+    var b := true
+    print not (b)
+end
+
+// T-LOG-517  prefixes stack                  expect true
+print not not true
+
+// T-LOG-518  not (a is int): is is inside the operand (Q20)   expect false
+if true then
+    var a := 1
+    print not a is int
+end
+
+// T-LOG-519  the accessor binds before the prefix   expect false
+if true then
+    var t := [true]
+    print not t[1]
+end
+
+print "== end of block 10 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// --- 1xx unsupported types for and / or / xor ---
+
+// T-LOG-101  runtime error: integer is not a logical operand
+// print 1 and true
+
+// T-LOG-102  runtime error
+// print true and 1
+
+// T-LOG-103  runtime error: no truthiness conversion of integers
+// print 1 and 0
+
+// T-LOG-104  runtime error
+// print 1.5 or true
+
+// T-LOG-105  runtime error
+// print "s" and true
+
+// T-LOG-106  runtime error: no truthiness conversion of strings
+// print "" or false
+
+// T-LOG-107  runtime error
+// print [1] and true
+
+// T-LOG-108  runtime error
+// print {a := 1} or true
+
+// T-LOG-109  runtime error
+// var f := func => 0
+// print f and true
+
+// T-LOG-110  runtime error: none cannot act as an operand
+// var n
+// print n and true
+
+// T-LOG-111  runtime error: no short-circuiting, the right operand is checked (Q29)
+// var n
+// print true or n
+
+// T-LOG-112  runtime error: xor is logical, not bitwise
+// print 1 xor 2
+
+// --- 5xx unsupported types for not ---
+
+// T-LOG-505  runtime error: integer operand is not allowed
+// print not 1
+
+// T-LOG-506  runtime error: no truthiness conversion
+// print not 0
+
+// T-LOG-507  runtime error
+// print not 1.5
+
+// T-LOG-508  runtime error
+// print not "s"
+
+// T-LOG-509  runtime error
+// print not ""
+
+// T-LOG-510  runtime error
+// print not [1]
+
+// T-LOG-511  runtime error
+// print not {a := 1}
+
+// T-LOG-512  runtime error
+// print not (func => 0)
+
+// T-LOG-513  runtime error: none cannot act as an operand
+// print not none
+
+// --- 4xx no short-circuiting (Q29) ---
+
+// T-LOG-402  runtime error: the right operand is evaluated and checked
+// var n
+// print true or n
+
+// T-LOG-404  runtime error: the right operand's type is checked even when the
+//            left is false
+// print false and 1

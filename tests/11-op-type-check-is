@@ -1,0 +1,379 @@
+// ===========================================================================
+// Block 11 — Type Check (is)
+// Description : 11-op-type-check-is.md
+// Spec        : Language D.md §8.9 Type check, §5.7 TypeIndicator, §7.8 none
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// `is` is the only operator with no unsupported operand types — it accepts a
+// value of any kind, and by Q20 any Primary as its operand. Its negative
+// section is about malformed type indicators and about the operand positions
+// none may NOT take (Q31).
+//
+// Relies on: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 11 — Type Check (is) =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx matching indicator, one per value kind --"
+// --------------------------------------------------------------------------
+
+// T-IS-001  expect true
+if true then
+    var a := 1
+    print a is int
+end
+
+// T-IS-002  expect true
+if true then
+    var a := 1.5
+    print a is real
+end
+
+// T-IS-003  expect true
+if true then
+    var a := true
+    print a is bool
+end
+
+// T-IS-004  expect true
+if true then
+    var a := "s"
+    print a is string
+end
+
+// T-IS-005  expect true
+if true then
+    var a := [1,2]
+    print a is []
+end
+
+// T-IS-006  expect true
+if true then
+    var a := {x := 1}
+    print a is {}
+end
+
+// T-IS-007  expect true
+if true then
+    var a := func => 0
+    print a is func
+end
+
+// T-IS-008  expect true
+if true then
+    var a
+    print a is none
+end
+
+// T-IS-009  single quotes make the same type   expect true
+if true then
+    var a := ''
+    print a is string
+end
+
+// T-IS-010  an empty array is still an array   expect true
+if true then
+    var a := []
+    print a is []
+end
+
+// T-IS-011  the result of is is boolean        expect true
+if true then
+    var a := 1
+    var r := (a is int)
+    print r is bool
+end
+
+// --------------------------------------------------------------------------
+print "-- 02x non-matching indicator --"
+// --------------------------------------------------------------------------
+
+// T-IS-021  an integer is not a real, despite widening in arithmetic   expect false
+if true then
+    var a := 1
+    print a is real
+end
+
+// T-IS-022  1.0 is real even with a zero fraction   expect false
+if true then
+    var a := 1.0
+    print a is int
+end
+
+// T-IS-023  expect false
+if true then
+    var a := 1
+    print a is bool
+end
+
+// T-IS-024  expect false
+if true then
+    var a := "1"
+    print a is int
+end
+
+// T-IS-025  expect false
+if true then
+    var a := 1
+    print a is none
+end
+
+// T-IS-026  array is not tuple   expect false
+if true then
+    var a := [1]
+    print a is {}
+end
+
+// T-IS-027  tuple is not array   expect false
+if true then
+    var a := {x := 1}
+    print a is []
+end
+
+// T-IS-028  expect false
+if true then
+    var a := func => 0
+    print a is int
+end
+
+// T-IS-029  expect false
+if true then
+    var a := true
+    print a is string
+end
+
+// --------------------------------------------------------------------------
+print "-- 1xx is on any Primary (Q20) --"
+// --------------------------------------------------------------------------
+
+// T-IS-108  a literal operand                 expect true
+print 1 is int
+
+// T-IS-109  a parenthesised expression        expect true
+print (1 + 1) is int
+
+// T-IS-111  chaining via parentheses          expect true
+print (1 is int) is bool
+
+// T-IS-112  a function literal is a Primary   expect true
+print (func => 0) is func
+
+// --------------------------------------------------------------------------
+print "-- 2xx dynamic typing --"
+// --------------------------------------------------------------------------
+
+// T-IS-201  the answer follows the current value   expect true, then false true
+if true then
+    var a := 1
+    print a is int
+    a := "s"
+    print a is int, a is string
+end
+
+// T-IS-202  widening changes the runtime type   expect true
+if true then
+    var a := 1
+    a := a + 1.5
+    print a is real
+end
+
+// T-IS-203  integer division yields an integer  expect true
+if true then
+    var a := 7 / 2
+    print a is int
+end
+
+// T-IS-204  expect true
+if true then
+    var a := 7 / 2.0
+    print a is real
+end
+
+// T-IS-205  expect true
+if true then
+    var a := 1 < 2
+    print a is bool
+end
+
+// T-IS-206  concatenation preserves the kind   expect true
+if true then
+    var a := [1] + [2]
+    print a is []
+end
+
+// T-IS-207  an array holds values of any type   expect true true true
+if true then
+    var t := [ 1, "s", true ]
+    print t[1] is int, t[2] is string, t[3] is bool
+end
+
+// --------------------------------------------------------------------------
+print "-- 3xx reference forms as the operand --"
+// --------------------------------------------------------------------------
+
+// T-IS-301  array element        expect true
+if true then
+    var a := [1]
+    print a[1] is int
+end
+
+// T-IS-302  tuple element by name       expect true
+if true then
+    var t := {x := 1.5}
+    print t.x is real
+end
+
+// T-IS-303  tuple element by position   expect true
+if true then
+    var t := {x := 1.5}
+    print t.1 is real
+end
+
+// T-IS-304  call result                 expect true
+if true then
+    var f := func => "s"
+    print f() is string
+end
+
+// --------------------------------------------------------------------------
+print "-- 4xx none handling --"
+// --------------------------------------------------------------------------
+
+// T-IS-401  the type check on a none value   expect true
+if true then
+    var a
+    print a is none
+end
+
+// T-IS-410  printing is not an operation on the value (Q31)   expect none
+if true then
+    var a
+    print a
+end
+
+// T-IS-411  copying is not an operation either   expect true
+if true then
+    var a
+    var b := a
+    print b is none
+end
+
+// T-IS-412  none is also a literal, so it can be assigned   expect true
+if true then
+    var a := none
+    print a is none
+end
+
+// T-IS-413  a variable can be reset to none              expect true
+if true then
+    var a := 1
+    a := none
+    print a is none
+end
+
+// T-IS-414  none may be an element of an array           expect true
+if true then
+    var a := [none]
+    print a[1] is none
+end
+
+// T-IS-415  and of a tuple                                expect true
+if true then
+    var t := {x := none}
+    print t.x is none
+end
+
+// T-IS-416  passing and returning none are allowed       expect true
+if true then
+    var f := func(x) => x
+    var n
+    print f(n) is none
+end
+
+print "== end of block 11 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// --- 1xx malformed indicators and operands ---
+
+// T-IS-101  syntax error: the indicator is int, not integer
+// var a := 1
+// print a is integer
+
+// T-IS-102  syntax error: the indicator is bool, not boolean
+// var a := 1
+// print a is boolean
+
+// T-IS-103  syntax error: the indicator is [ ]
+// var a := 1
+// print a is array
+
+// T-IS-104  syntax error: the indicator is { }
+// var a := 1
+// print a is tuple
+
+// T-IS-105  syntax error: [ ] must be empty
+// var a := 1
+// print a is [1]
+
+// T-IS-106  syntax error: an indicator is required
+// var a := 1
+// print a is
+
+// T-IS-107  syntax error: the right side is a type indicator, not an expression
+// var a := 1, b := 2
+// print a is b
+
+// T-IS-110  syntax error: is does not chain
+// var a := 1
+// print a is int is bool
+
+// --- 4xx operations none may not take part in ---
+
+// T-IS-402  runtime error
+// var a
+// print a + 1
+
+// T-IS-403  runtime error
+// var a
+// print a - 1
+
+// T-IS-404  runtime error
+// var a
+// print a * 1
+
+// T-IS-405  runtime error
+// var a
+// print a / 1
+
+// T-IS-406  runtime error
+// var a
+// print a < 1
+
+// T-IS-407  runtime error
+// var a
+// print a = 1
+
+// T-IS-408  runtime error
+// var a
+// print a and true
+
+// T-IS-409  runtime error
+// var a
+// print -(a)
+
+// T-IS-417  runtime error: a condition is an operand position (Q31)
+// var n
+// if n then print 1 end
+
+// T-IS-418  runtime error: an index is an operand position (Q31)
+// var a := [1], n
+// print a[n]

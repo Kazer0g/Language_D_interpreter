@@ -1,0 +1,232 @@
+// ===========================================================================
+// Block 19 — Implicit Type Conversions
+// Description : 19-implicit-conversions.md
+// Spec        : Language D.md §9 Implicit Type Conversions
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Blocks 04-09 check WHICH mixed pairs are accepted. This block checks what
+// the integer -> real widening does to the result, and that no other
+// conversion happens: no number/string, no truthiness, no real -> integer.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 19 — Implicit Type Conversions =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx integer -> real widening --"
+// --------------------------------------------------------------------------
+
+// T-CONV-001  the integer is widened   expect 3.5
+print 1 + 2.5
+
+// T-CONV-002  the result type is Real  expect true
+if true then
+    var r := 1 + 2.5
+    print r is real
+end
+
+// T-CONV-003  no widening between two integers   expect true
+if true then
+    var r := 1 + 2
+    print r is int
+end
+
+// T-CONV-004  expect 2.5
+print 5 - 2.5
+
+// T-CONV-005  expect 3.0
+print 2 * 1.5
+
+// T-CONV-006  expect 5.0
+print 2.5 * 2
+
+// T-CONV-007  Real even when the value is whole   expect true
+if true then
+    var r := 3 * 2.0
+    print r is real
+end
+
+// T-CONV-008  widened before comparison   expect true
+print 1 = 1.0
+
+// T-CONV-009  expect true
+print 2 < 2.5
+
+// T-CONV-010  boundary after widening     expect true
+print 3 >= 3.0
+
+// --------------------------------------------------------------------------
+print "-- 1xx division: where widening changes the answer --"
+// --------------------------------------------------------------------------
+
+// T-CONV-101  no widening, integer division   expect 3
+print 7 / 2
+
+// T-CONV-102  the right operand forces widening   expect 3.5
+print 7 / 2.0
+
+// T-CONV-103  the left operand forces widening    expect 3.5
+print 7.0 / 2
+
+// T-CONV-104  expect true
+if true then
+    var r := 7 / 2
+    print r is int
+end
+
+// T-CONV-105  expect true
+if true then
+    var r := 7 / 2.0
+    print r is real
+end
+
+// T-CONV-106  1/2 is 0 first, then widened   expect 0.5
+print 1 / 2 + 0.5
+
+// T-CONV-107  widening happens before the division   expect 1.0
+print 1 / 2.0 + 0.5
+
+// --------------------------------------------------------------------------
+print "-- 2xx widening propagates through an expression --"
+// --------------------------------------------------------------------------
+
+// T-CONV-201  Real once, Real after   expect 6.0
+print 1 + 2 + 3.0
+
+// T-CONV-202  expect 6.0
+print 1.0 + 2 + 3
+
+// T-CONV-203  expect 4.5
+print (1 + 2) * 1.5
+
+// T-CONV-204  a variable's runtime type changes   expect true
+if true then
+    var a := 1
+    a := a + 0.5
+    print a is real
+end
+
+// T-CONV-205  a Real stays Real                   expect true
+if true then
+    var a := 1.5
+    a := a * 2
+    print a is real
+end
+
+// T-CONV-206  the widening persists across iterations   expect true
+if true then
+    var s := 0
+    for i in 1..3 loop s := s + 1.5 end
+    print s is real
+end
+
+// --------------------------------------------------------------------------
+print "-- 3xx widening is one-directional --"
+// --------------------------------------------------------------------------
+
+// T-CONV-301  an integer is not a real   expect false
+if true then
+    var a := 1
+    print a is real
+end
+
+// T-CONV-302  even a whole real is not an integer   expect false
+if true then
+    var a := 1.0
+    print a is int
+end
+
+// T-CONV-303  a whole result stays Real   expect false
+if true then
+    var a := 2.0 + 1.0
+    print a is int
+end
+
+// T-CONV-306  a tuple position is an integer literal, nothing to narrow   expect 1
+if true then
+    var t := {a := 1}
+    print t.1
+end
+
+// --------------------------------------------------------------------------
+print "-- 4xx the cases that look like a conversion and are not --"
+// --------------------------------------------------------------------------
+
+// T-CONV-403  string concatenation, NOT arithmetic   expect 12
+print "1" + "2"
+
+// T-CONV-414  print renders both the same way, they stay different values   expect 1 1
+print 1, "1"
+
+// T-CONV-415  widening compares equal without changing either type   expect true true true
+print 1 = 1.0, 1 is int, 1.0 is real
+
+// --------------------------------------------------------------------------
+print "-- 9xx decided --"
+// --------------------------------------------------------------------------
+
+// T-CONV-904  widening a large integer rounds to the nearest double (Q27)
+//             expect 9007199254740992.0
+print 9007199254740993 + 0.0
+
+print "== end of block 19 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// --- 3xx no narrowing ---
+
+// T-CONV-304  runtime error: an index is not narrowed to an integer
+// var a := [1,2,3]
+// print a[1.0]
+
+// --- 4xx conversions that do NOT happen ---
+
+// T-CONV-401  runtime error: no number -> string conversion
+// print 1 + "2"
+
+// T-CONV-402  runtime error: no string -> number conversion
+// print "1" + 2
+
+// T-CONV-404  runtime error: no boolean -> number conversion
+// print 1 + true
+
+// T-CONV-405  runtime error: no number -> boolean conversion
+// print 1 and true
+
+// T-CONV-406  runtime error: no truthiness
+// print not 1
+
+// T-CONV-407  runtime error: no string / array conversion
+// print "s" + [1]
+
+// T-CONV-408  runtime error: no conversion before comparison
+// print 1 = "1"
+
+// T-CONV-409  runtime error: none is never converted
+// var n
+// print n + 0
+
+// T-CONV-410  runtime error: array and tuple do not convert into each other
+// print [1] + {a := 1}
+
+// T-CONV-411  runtime error: a non-boolean condition is not converted (Q34)
+// if 1 then print "y" end
+
+// T-CONV-412  runtime error: no conversion for the extended equality either (Q5)
+// print "a" = 1
+
+// T-CONV-413  runtime error: boolean and integer never convert
+// print true = 1
+
+// --- 3xx no narrowing ---
+
+// T-CONV-305  runtime error: range bounds are not narrowed (Q12)
+// for i in 1.0..3.0 loop print i end

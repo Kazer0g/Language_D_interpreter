@@ -1,0 +1,412 @@
+// ===========================================================================
+// Block 14 — Functions and return
+// Description : 14-type-functions.md
+// Spec        : Language D.md §7.7 Function, §4.7 Return, §6 References
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Decision Q19: function literals are lexical closures, captured by reference,
+// so the 2xx section exercises capture, assignment through a closure, and
+// recursion directly.
+//
+// Relies on: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 14 — Functions and return =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx function literals and calls --"
+// --------------------------------------------------------------------------
+
+// T-FUN-001  expression body    expect 2
+if true then
+    var f := func(x) => x + 1
+    print f(1)
+end
+
+// T-FUN-002  statement body     expect 3
+if true then
+    var f := func(a, b) is return a + b end
+    print f(1, 2)
+end
+
+// T-FUN-003  the parameter list is optional   expect 7
+if true then
+    var f := func => 7
+    print f()
+end
+
+// T-FUN-004  an empty parameter list is also allowed   expect 7
+if true then
+    var f := func() => 7
+    print f()
+end
+
+// T-FUN-005  no parameters, statement body   expect 7
+if true then
+    var f := func is return 7 end
+    print f()
+end
+
+// T-FUN-006  several parameters              expect 6
+if true then
+    var f := func(a, b, c) => a + b + c
+    print f(1, 2, 3)
+end
+
+// T-FUN-007  arguments are expressions       expect 6
+if true then
+    var f := func(x) => x * 2
+    print f(1 + 2)
+end
+
+// T-FUN-008  parameters are dynamically typed   expect s 1 true
+if true then
+    var f := func(x) => x
+    print f("s"), f(1), f(true)
+end
+
+// T-FUN-009  a call as a statement           expect 1
+if true then
+    var f := func(x) is print x end
+    f(1)
+end
+
+// T-FUN-010  the func type indicator         expect true
+if true then
+    var f := func => 0
+    print f is func
+end
+
+// --------------------------------------------------------------------------
+print "-- 01x functions as values --"
+// --------------------------------------------------------------------------
+
+// T-FUN-011  a function passed as an argument   expect 11
+if true then
+    var apply := func(f, v) => f(v)
+    var inc := func(x) => x + 1
+    print apply(inc, 10)
+end
+
+// T-FUN-012  a function returned from a function   expect 10
+if true then
+    var make := func => func(x) => x * 2
+    print make()(5)
+end
+
+// T-FUN-013  a function stored in an array        expect 2
+if true then
+    var a := [func => 1, func => 2]
+    print a[2]()
+end
+
+// T-FUN-014  a function stored in a tuple         expect 3
+if true then
+    var t := {f := func => 3}
+    print t.f()
+end
+
+// T-FUN-015  a function value is assignable       expect 1
+if true then
+    var f := func => 1
+    var g := f
+    print g()
+end
+
+// T-FUN-017  f returns its argument, itself, which is then called   expect 1
+if true then
+    var f := func(x) => x
+    print f(f)(1)
+end
+
+// T-FUN-018  a call statement through an accessor chain (Q41)   expect 1
+if true then
+    var t := {f := func is print 1 end}
+    t.f()
+end
+
+// T-FUN-112  a function value renders as func (Q15)   expect func
+if true then
+    var f := func => 0
+    print f
+end
+
+// --------------------------------------------------------------------------
+print "-- 2xx scope inside a function: closures (Q19) --"
+// --------------------------------------------------------------------------
+
+// T-FUN-201  the body is a scope   expect 9 then 1
+if true then
+    var x := 1
+    var f := func is var x := 9; return x end
+    print f(), x
+end
+
+// T-FUN-202  a parameter is visible in the body   expect 5
+if true then
+    var f := func(x) is return x end
+    print f(5)
+end
+
+// T-FUN-204  the body reads the enclosing x   expect 2
+if true then
+    var x := 1
+    var f := func => x + 1
+    print f()
+end
+
+// T-FUN-205  captured by reference: the value at call time   expect 2
+if true then
+    var x := 1
+    var f := func => x
+    x := 2
+    print f()
+end
+
+// T-FUN-206  recursion: f is looked up when the body runs   expect 120
+if true then
+    var f := func(n) is
+        if n <= 1 then return 1 end
+        return n * f(n - 1)
+    end
+    print f(5)
+end
+
+// T-FUN-207  the body assigns the enclosing variable   expect 2
+if true then
+    var c := 0
+    var bump := func is c := c + 1 end
+    bump(); bump()
+    print c
+end
+
+// T-FUN-208  the inner literal captures the parameter k   expect 15
+if true then
+    var adder := func(k) => func(x) => x + k
+    print adder(10)(5)
+end
+
+// T-FUN-209  each call has its own k   expect 1 2
+if true then
+    var adder := func(k) => func(x) => x + k
+    var a1 := adder(1), a2 := adder(2)
+    print a1(0), a2(0)
+end
+
+// T-FUN-210  a parameter hides a captured name   expect 5 1
+if true then
+    var x := 1
+    var f := func(x) => x
+    print f(5), x
+end
+
+// T-FUN-211  two recursive calls per activation   expect 55
+if true then
+    var fib := func(n) is
+        if n <= 2 then return 1 end
+        return fib(n - 1) + fib(n - 2)
+    end
+    print fib(10)
+end
+
+// T-FUN-212  g is resolved at call time   expect 7
+if true then
+    var g
+    var f := func => g()
+    g := func => 7
+    print f()
+end
+
+// T-FUN-213  names are resolved at call time in the captured scope   expect 3
+if true then
+    var f := func => y
+    var y := 3
+    print f()
+end
+
+// T-FUN-214  a captured local outlives the call that created it   expect 1 2
+if true then
+    var mk := func is
+        var n := 0
+        return func is n := n + 1; return n end
+    end
+    var c := mk()
+    print c(), c()
+end
+
+// --------------------------------------------------------------------------
+print "-- 3xx return --"
+// --------------------------------------------------------------------------
+
+// T-FUN-301  return with a value   expect 5
+if true then
+    var f := func is return 5 end
+    print f()
+end
+
+// T-FUN-302  return without a value yields none (Q18)   expect true
+if true then
+    var f := func is return end
+    print f() is none
+end
+
+// T-FUN-303  statements after return do not run   expect a then 1
+if true then
+    var f := func is print "a"; return 1; print "b" end
+    print f()
+end
+
+// T-FUN-304  early return from a branch   expect 7
+if true then
+    var f := func(a, b) is
+        if a > b then return a end
+        return b
+    end
+    print f(3, 7)
+end
+
+// T-FUN-305  falling off the end yields none (Q18)   expect a then true
+if true then
+    var f := func is print "a" end
+    print f() is none
+end
+
+// T-FUN-306  return leaves the function from inside a loop   expect 3
+if true then
+    var f := func is
+        var i := 0
+        loop
+            i := i + 1
+            if i = 3 => return i
+        end
+    end
+    print f()
+end
+
+// T-FUN-309  => returns the expression value implicitly   expect 3
+if true then
+    var f := func => 1 + 2
+    print f()
+end
+
+// T-FUN-310  the none result is printable   expect x then none
+if true then
+    var f := func is print "x" end
+    print f()
+end
+
+// --------------------------------------------------------------------------
+print "-- 4xx edge cases --"
+// --------------------------------------------------------------------------
+
+// T-FUN-401  chained calls   expect 1
+if true then
+    var f := func => func => func => 1
+    print f()()()
+end
+
+// T-FUN-402  passing a function to itself   expect 1
+if true then
+    var f := func(x) => x
+    print f(f)( 1 )
+end
+
+// T-FUN-403  indexing a call result   expect 2
+if true then
+    var f := func(x) is return x end
+    print f([1,2])[2]
+end
+
+// T-FUN-404  dot access on a call result   expect 3
+if true then
+    var f := func(x) is return {a := x} end
+    print f(3).a
+end
+
+// T-FUN-405  a second argument that is an expression   expect 1
+if true then
+    var f := func(x, y) => x
+    print f(1, 2 + 3)
+end
+
+print "== end of block 14 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-FUN-101  syntax error: a FunBody is required
+// var f := func(x)
+
+// T-FUN-102  syntax error: => requires an expression
+// var f := func(x) =>
+
+// T-FUN-103  syntax error: an is body must be closed with end
+// var f := func(x) is return x
+
+// T-FUN-104  syntax error: parameters are identifiers
+// var f := func(1) => 1
+
+// T-FUN-105  runtime error: duplicate parameter name (Q24)
+// var f := func(x, x) => x
+
+// T-FUN-106  syntax error: a bare expression is not a Statement
+// var f := func(x) is x + 1 end
+
+// T-FUN-107  runtime error: calling a non-function
+// var a := 1
+// print a(1)
+
+// T-FUN-108  runtime error: the only operation on a function is a call
+// var f := func => 0
+// print f + f
+
+// T-FUN-109  runtime error: no equality on functions
+// var f := func => 0
+// print f = f
+
+// T-FUN-110  runtime error: too few arguments (Q17)
+// var f := func(x) => x
+// print f()
+
+// T-FUN-111  runtime error: too many arguments (Q17)
+// var f := func(x) => x
+// print f(1, 2)
+
+// T-FUN-113  runtime error: an argument to a function with no parameters
+// var f := func => 0
+// print f(1)
+
+// T-FUN-016  syntax error: a call accessor hangs off a Reference only (Q40)
+// print (func(x) => x + 1)(1)
+
+// T-FUN-019  syntax error: only a call is a statement, not an expression (Q41)
+// var f := func => 5
+// f() + 1
+
+// T-FUN-020  syntax error: the call must be the last accessor (Q41)
+// var f := func => {x := 1}
+// f().x
+
+// T-FUN-203  runtime error on the last line: y is dead outside the body
+// var f := func is var y := 1; return y end
+// print f()
+// print y
+
+// T-FUN-215  runtime error: y is not declared at call time
+// var f := func => y
+// print f()
+
+// T-FUN-307  syntax error: return at program level (Q14, Q24)
+// return 1
+
+// T-FUN-308  syntax error: return outside a function body
+// if true then return 1 end
+
+// T-FUN-311  syntax error: a loop body is not a function body
+// loop return 1 end

@@ -1,0 +1,51 @@
+// ===========================================================================
+// Custom 01 — Fibonacci
+// Exercises: while loop, for range loop, array growth, multi-value print,
+//            recursion (Q19)
+// ===========================================================================
+
+print "== Fibonacci =="
+
+// --- the first 15 terms, printed as they are produced ---
+
+var a := 0, b := 1
+var i := 1
+while i <= 15 loop
+    print a
+    var next := a + b
+    a := b
+    b := next
+    i := i + 1
+end
+// expect 0 1 1 2 3 5 8 13 21 34 55 89 144 233 377
+
+// --- the same terms collected into an array ---
+
+var fib := []
+fib[1] := 0
+fib[2] := 1
+for n in 3..15 loop
+    fib[n] := fib[n - 1] + fib[n - 2]
+end
+
+print "term 10 is", fib[10]      // expect 34
+print "term 15 is", fib[15]      // expect 377
+
+// --- the sum of the first 15 terms ---
+
+var sum := 0
+for v in fib loop
+    sum := sum + v
+end
+print "sum of the first 15 terms is", sum    // expect 986
+
+// --- the recursive definition, for comparison (Q19: a function sees its own name) ---
+
+var fibr := func(n) is
+    if n <= 2 then return n - 1 end
+    return fibr(n - 1) + fibr(n - 2)
+end
+print "recursive term 10 is", fibr(10)        // expect 34
+print "iterative and recursive agree:", fibr(15) = fib[15]   // expect true
+
+print "== end =="

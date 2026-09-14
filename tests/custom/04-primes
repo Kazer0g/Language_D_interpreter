@@ -1,0 +1,64 @@
+// ===========================================================================
+// Custom 04 — Primes: trial division and a sieve
+// Exercises: nested loops, exit, boolean flags, array as a lookup table
+//
+// Divisibility without a modulo operator: d divides n exactly when
+//     d * (n / d) = n
+// because Integer / Integer rounds down (Language D.md §8.4). This holds for
+// positive operands, which is all this program uses.
+// ===========================================================================
+
+print "== Primes by trial division =="
+
+// --- every prime below 50 ---
+
+for n in 2..50 loop
+    var isPrime := true
+    var d := 2
+    while d * d <= n loop
+        if d * (n / d) = n then
+            isPrime := false
+            exit
+        end
+        d := d + 1
+    end
+    if isPrime => print n
+end
+// expect 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47
+
+print "== Sieve of Eratosthenes =="
+
+// --- the same primes, via a sieve over an array of flags ---
+
+var limit := 50
+var composite := []
+for i in 1..limit loop
+    composite[i] := false
+end
+
+var p := 2
+while p * p <= limit loop
+    if not (composite[p]) then
+        var k := p * p
+        while k <= limit loop
+            composite[k] := true
+            k := k + p
+        end
+    end
+    p := p + 1
+end
+
+var count := 0
+for i in 2..limit loop
+    if not (composite[i]) then
+        count := count + 1
+        print i
+    end
+end
+print "primes below 50:", count   // expect 15
+
+// Note: `not (composite[p])` is parenthesised because the grammar as written
+// could not derive `not composite[p]`. The corrected grammar can (Q4); both
+// forms are valid now and this one is left as it was written.
+
+print "== end =="

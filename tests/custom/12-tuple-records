@@ -1,0 +1,131 @@
+// ===========================================================================
+// Custom 12 — Records as tuples
+// Exercises: an array of tuples, named element access, tuple extension with
+//            +, mixed element types, real arithmetic over record fields
+//
+// Strings are only ever printed here, never compared. The program predates
+// the decision that extended `=` and `/=` to strings (Q5); every selection
+// below is by a numeric field, and stays that way so the file exercises the
+// numeric path. String equality is covered by block 08 and by
+// 16-recursion-and-closures.
+// ===========================================================================
+
+print "== Records =="
+
+var people := [
+    {name := "Ann",   age := 23, grade := 4.5},
+    {name := "Boris", age := 21, grade := 3.0},
+    {name := "Cara",  age := 25, grade := 5.0},
+    {name := "Dmitri",age := 22, grade := 4.0},
+    {name := "Elena", age := 24, grade := 4.5}
+]
+
+var n := 0
+for p in people loop
+    n := n + 1
+end
+print "records", n                // expect 5
+
+// --- read a field by name, and the same field by position ---
+
+print people[1].name, people[1].age, people[1].grade  // expect Ann 23 4.5
+print people[1].1, people[1].2, people[1].3           // expect Ann 23 4.5
+
+// --- list every name ---
+
+for p in people loop
+    print p.name
+end
+// expect Ann Boris Cara Dmitri Elena
+
+print "== Aggregates over a field =="
+
+// --- average grade: the field is real, so the division stays real ---
+
+var total := 0.0
+for p in people loop
+    total := total + p.grade
+end
+print "average grade", total / n  // expect 4.2
+
+// --- youngest and oldest ---
+
+var youngest := people[1]
+var oldest := people[1]
+for p in people loop
+    if p.age < youngest.age => youngest := p
+    if p.age > oldest.age => oldest := p
+end
+print "youngest", youngest.name, youngest.age         // expect Boris 21
+print "oldest", oldest.name, oldest.age               // expect Cara 25
+
+// --- the best grade ---
+
+var best := people[1]
+for p in people loop
+    if p.grade > best.grade => best := p
+end
+print "best", best.name, best.grade                   // expect Cara 5.0
+
+print "== Selection =="
+
+// --- everyone with a grade of at least 4.5 ---
+
+var top := []
+var k := 0
+for p in people loop
+    if p.grade >= 4.5 then
+        k := k + 1
+        top[k] := p
+    end
+end
+print "at least 4.5:", k          // expect 3
+for i in 1..k loop
+    print top[i].name
+end
+// expect Ann Cara Elena
+
+// --- everyone over 22 ---
+
+var older := []
+var j := 0
+for p in people loop
+    if p.age > 22 then
+        j := j + 1
+        older[j] := p
+    end
+end
+print "over 22:", j               // expect 3
+for i in 1..j loop
+    print older[i].name, older[i].age
+end
+// expect Ann 23, Cara 25, Elena 24
+
+print "== Extension =="
+
+// --- a tuple's structure cannot be modified, but a tuple can be extended
+//     by adding another tuple to it ---
+
+var enriched := []
+for i in 1..n loop
+    enriched[i] := people[i] + {passed := people[i].grade >= 4.0}
+end
+
+for i in 1..n loop
+    print enriched[i].name, enriched[i].passed
+end
+// expect Ann true, Boris false, Cara true, Dmitri true, Elena true
+
+// --- the original records are unchanged: + produced new tuples ---
+
+print people[1].name, people[1] is {}                 // expect Ann true
+
+// --- count how many passed ---
+
+var passed := 0
+for p in enriched loop
+    if p.passed => passed := passed + 1
+end
+print "passed", passed            // expect 4
+
+print "== end =="

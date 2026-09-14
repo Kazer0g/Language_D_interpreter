@@ -1,0 +1,198 @@
+// ===========================================================================
+// Block 03 — Assignment
+// Description : 03-assignment.md
+// Spec        : Language D.md §4.1 Assignment, §6 References
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Assumes: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 03 — Assignment =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx valid assignment targets --"
+// --------------------------------------------------------------------------
+
+// T-ASGN-001  expect 2   (plain identifier)
+if true then
+    var a := 1
+    a := 2
+    print a
+end
+
+// T-ASGN-002  expect 5   (array element)
+if true then
+    var a := []
+    a[1] := 5
+    print a[1]
+end
+
+// T-ASGN-003  expect 7   (nested array element)
+if true then
+    var a := [[0]]
+    a[1][1] := 7
+    print a[1][1]
+end
+
+// T-ASGN-004  expect 9   (tuple element through an array, Q11)
+if true then
+    var a := [ {x := 1} ]
+    a[1].x := 9
+    print a[1].x
+end
+
+// T-ASGN-005  expect 7   (the right side is any expression)
+if true then
+    var a := 1
+    a := 1 + 2 * 3
+    print a
+end
+
+// T-ASGN-006  expect 2   (the right side is a reference)
+if true then
+    var a := 1, b := 2
+    a := b
+    print a
+end
+
+// T-ASGN-007  expect 5   (the right side is a call)
+if true then
+    var f := func => 5
+    var a := 0
+    a := f()
+    print a
+end
+
+// T-ASGN-008  expect 9   (tuple element by name)
+if true then
+    var t := {x := 1}
+    t.x := 9
+    print t.x
+end
+
+// T-ASGN-009  expect 9   (tuple element by position)
+if true then
+    var t := {x := 1}
+    t.1 := 9
+    print t.x
+end
+
+// --------------------------------------------------------------------------
+print "-- 2xx semantics --"
+// --------------------------------------------------------------------------
+
+// T-ASGN-201  expect true   (assignment may change the type)
+if true then
+    var a := 1
+    a := "s"
+    print a is string
+end
+
+// T-ASGN-202  expect 2   (assigning a simple value copies it)
+if true then
+    var a := 1, b := 2
+    a := b
+    b := 3
+    print a
+end
+
+// T-ASGN-203  expect 9   (composite values alias on assignment, Q26)
+if true then
+    var a := [1], b := a
+    b[1] := 9
+    print a[1]
+end
+
+// T-ASGN-204  expect 2   (the target may appear on the right side)
+if true then
+    var a := 1
+    a := a + 1
+    print a
+end
+
+// T-ASGN-205  expect true   (none can be assigned)
+if true then
+    var a := 1
+    a := none
+    print a is none
+end
+
+// T-ASGN-206  expect 1   (assignment creates a missing array key)
+if true then
+    var a := []
+    a[3] := 1
+    print a[3]
+end
+
+// T-ASGN-207  expect 5   (the index is any integer expression)
+if true then
+    var i := 0, a := [0, 0]
+    a[i + 1] := 5
+    print a[1]
+end
+
+// T-ASGN-208  expect 5   (tuples alias too)
+if true then
+    var t := {a := 1}, u := t
+    u.a := 5
+    print t.a
+end
+
+// T-ASGN-209  expect 9   (argument passing aliases as well)
+if true then
+    var a := [1]
+    var f := func(x) is x[1] := 9 end
+    f(a)
+    print a[1]
+end
+
+// T-ASGN-210  expect [1]   (+ builds a new array; rebinding b does not touch a)
+if true then
+    var a := [1], b := a
+    b := b + [2]
+    print a
+end
+
+print "== end of block 03 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-ASGN-101  syntax error: a literal is not a Reference
+// 1 := 2
+
+// T-ASGN-102  syntax error: a parenthesised expression is not a Reference
+// var a := 0
+// (a) := 2
+
+// T-ASGN-103  syntax error: an expression is not a Reference
+// var a := 0, b := 0
+// a + b := 2
+
+// T-ASGN-104  syntax error
+// "s" := 2
+
+// T-ASGN-105  runtime error: assignment does not declare
+// b := 1
+
+// T-ASGN-106  syntax error: := requires an expression
+// var a := 1
+// a :=
+
+// T-ASGN-107  syntax error: = is comparison, and a bare expression is not a Statement
+// var a := 1
+// a = 2
+
+// T-ASGN-108  syntax error: a call cannot be the last accessor of a target (Q24)
+// var f := func => 1
+// f() := 1
+
+// T-ASGN-109  runtime error: the tuple has no element b (Q11)
+// var t := {a := 1}
+// t.b := 5

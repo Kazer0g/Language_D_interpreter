@@ -1,0 +1,122 @@
+// ===========================================================================
+// Custom 10 — Matrices as nested arrays
+// Exercises: arrays of arrays, chained indexing a[i][j], triple-nested loops,
+//            building nested structures element by element
+// ===========================================================================
+
+print "== Matrices =="
+
+// --- a 2x3 matrix, stored row by row ---
+
+var m := [ [1, 2, 3],
+           [4, 5, 6] ]
+
+var rows := 0
+for row in m loop
+    rows := rows + 1
+end
+
+var cols := 0
+for v in m[1] loop
+    cols := cols + 1
+end
+
+print "rows", rows, "cols", cols  // expect 2 3
+
+// --- print it, one value per line, row major ---
+
+for i in 1..rows loop
+    for j in 1..cols loop
+        print m[i][j]
+    end
+end
+// expect 1 2 3 4 5 6
+
+// --- the sum of every element ---
+
+var total := 0
+for i in 1..rows loop
+    for j in 1..cols loop
+        total := total + m[i][j]
+    end
+end
+print "sum", total                // expect 21
+
+// --- the trace of the leading square part ---
+
+var trace := 0
+for i in 1..rows loop
+    trace := trace + m[i][i]
+end
+print "trace of the leading 2x2", trace              // expect 6
+
+print "== Transpose =="
+
+// --- 2x3 transposed into 3x2 ---
+
+var t := []
+for j in 1..cols loop
+    var row := []
+    for i in 1..rows loop
+        row[i] := m[i][j]
+    end
+    t[j] := row
+end
+
+for i in 1..cols loop
+    for j in 1..rows loop
+        print t[i][j]
+    end
+end
+// expect 1 4 2 5 3 6
+
+print "== Multiplication =="
+
+// --- a 2x2 times a 2x2 ---
+
+var x := [ [1, 2],
+           [3, 4] ]
+var y := [ [5, 6],
+           [7, 8] ]
+
+var z := []
+for i in 1..2 loop
+    var row := []
+    for j in 1..2 loop
+        var acc := 0
+        for k in 1..2 loop
+            acc := acc + x[i][k] * y[k][j]
+        end
+        row[j] := acc
+    end
+    z[i] := row
+end
+
+for i in 1..2 loop
+    for j in 1..2 loop
+        print z[i][j]
+    end
+end
+// expect 19 22 43 50
+
+print "== Identity =="
+
+// --- build a 3x3 identity matrix ---
+
+var id := []
+for i in 1..3 loop
+    var row := []
+    for j in 1..3 loop
+        if i = j then row[j] := 1 else row[j] := 0 end
+    end
+    id[i] := row
+end
+
+for i in 1..3 loop
+    for j in 1..3 loop
+        print id[i][j]
+    end
+end
+// expect 1 0 0 0 1 0 0 0 1
+
+print "== end =="

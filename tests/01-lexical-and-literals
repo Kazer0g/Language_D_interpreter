@@ -1,0 +1,211 @@
+// ===========================================================================
+// Block 01 — Lexical Elements and Literals
+// Description : 01-lexical-and-literals.md
+// Spec        : Language D.md §2 Program Structure, §7 Types and Literals
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Relies on: `//` line comments (Q16) and a branch body being a scope
+// (Language D.md §3.2), so `if true then ... end` isolates declarations.
+// ===========================================================================
+
+print "== Block 01 — Lexical Elements and Literals =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx literal forms --"
+// --------------------------------------------------------------------------
+
+// T-LEX-001  expect 0
+print 0
+
+// T-LEX-002  expect 42
+print 42
+
+// T-LEX-003  expect 1000000
+print 1000000
+
+// T-LEX-004  expect 12.34
+print 12.34
+
+// T-LEX-005  expect 0.5
+print 0.5
+
+// T-LEX-006  expect 3.0
+print 3.0
+
+// T-LEX-007  expect hello
+print "hello"
+
+// T-LEX-008  expect hello  (single quotes make the same string)
+print 'hello'
+
+// T-LEX-009  expect an empty line
+print ""
+
+// T-LEX-010  expect a b, c!  (arbitrary characters)
+print "a b, c!"
+
+// T-LEX-011  expect true
+print true
+
+// T-LEX-012  expect false
+print false
+
+// T-LEX-013  expect [1, 2, 3]   (rendering: Q15)
+print [1, 2, 3]
+
+// T-LEX-014  expect {a := 1}    (rendering: Q15)
+print {a := 1}
+
+// T-LEX-015  expect true
+if true then
+    var a := none
+    print a is none
+end
+
+// T-LEX-016  expect func        (rendering: Q15)
+print func => 0
+
+// --------------------------------------------------------------------------
+print "-- 3xx statement separators and program structure --"
+// --------------------------------------------------------------------------
+
+// T-LEX-301  expect 1   (semicolon separator)
+if true then
+    var a := 1; print a
+end
+
+// T-LEX-302  expect 1   (newline separator)
+if true then
+    var a := 1
+    print a
+end
+
+// T-LEX-303  expect 1   (trailing semicolon is allowed)
+if true then
+    var a := 1;
+    print a;
+end
+
+// T-LEX-304  expect 3   (several statements on one line)
+if true then
+    var a := 1; var b := 2; print a + b
+end
+
+// T-LEX-305  expect 1 then 2   (blank lines are not statements)
+print 1
+
+print 2
+
+// T-LEX-306  expect 1   (a Body uses the same separators)
+if true then
+    var a := 1; print a
+end
+
+// T-LEX-308  expect 1   (trailing line comment)
+print 1 // comment
+
+// T-LEX-309  a line holding only a comment produces no output
+// only a comment
+
+// T-LEX-310  expect 1   (whitespace around tokens is insignificant)
+if true then
+    var a := 1  ;  print   a
+end
+
+// --------------------------------------------------------------------------
+print "-- 4xx identifiers --"
+// --------------------------------------------------------------------------
+
+// T-LEX-401  expect 1   (single letter)
+if true then
+    var a := 1
+    print a
+end
+
+// T-LEX-402  expect 1   (letters and digits)
+if true then
+    var myVar1 := 1
+    print myVar1
+end
+
+// T-LEX-403  expect 1   (underscore is an identifier character, Q22)
+if true then
+    var _x := 1
+    print _x
+end
+
+// T-LEX-407  expect 1   (underscore in the middle)
+if true then
+    var a_1 := 1
+    print a_1
+end
+
+// --------------------------------------------------------------------------
+print "-- 9xx decided --"
+// --------------------------------------------------------------------------
+
+// T-LEX-901  a real always prints with a dot (Q15)   expect 3.0
+print 3.0
+
+// T-LEX-903  no escape sequences (Q23)   expect a\nb
+print "a\nb"
+
+// T-LEX-905  the other quote style inside a string   expect it's
+print "it's"
+
+// T-LEX-906  // inside a string is not a comment (Q16)   expect a // b
+print "a // b"
+
+print "== end of block 01 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-LEX-101  syntax error: a real needs a fractional digit sequence
+// print 1.
+
+// T-LEX-102  syntax error: a real needs an integer digit sequence
+// print .5
+
+// T-LEX-103  syntax error
+// print 1.2.3
+
+// T-LEX-104  syntax error: unterminated string
+// print "unterminated
+
+// T-LEX-105  syntax error: quotes must match
+// print 'mixed"
+
+// T-LEX-106  syntax error: no exponent form in the spec
+// print 1e5
+
+// T-LEX-107  runtime error: True is an undeclared identifier, not the keyword
+// print True
+
+// T-LEX-404  syntax error: a keyword cannot be an identifier
+// var var := 1
+
+// T-LEX-405  syntax error: an identifier cannot start with a digit
+// var 1a := 1
+
+// T-LEX-406  runtime error: identifiers are case-sensitive (Q22), a is undeclared
+// var A := 1; print a
+
+// T-LEX-902  syntax error: there is no block comment form (Q16)
+// /* c */ print 1
+
+// T-LEX-904  syntax error: a string ends on the line it starts (Q23)
+// print "a
+// b"
+
+// ===========================================================================
+// Not composable — see 01-lexical-and-literals.md
+// ===========================================================================
+
+// T-LEX-307  an empty source file: needs its own empty file

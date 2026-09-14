@@ -1,0 +1,129 @@
+// ===========================================================================
+// Custom 11 — Higher-order functions: map, filter, reduce
+// Exercises: functions as values, functions passed as arguments, functions
+//            returned from functions, tuples as multi-value results
+//
+// Every helper takes everything it needs as a PARAMETER; nothing here reads
+// a variable from an enclosing scope. Closures are supported (Q19) and would
+// make some of this shorter — 16-recursion-and-closures is the file that
+// uses them. This one stays the parameter-passing version on purpose: it
+// exercises functions as values without depending on capture.
+//
+// filter returns a tuple {items, count} because the language has no way to
+// ask an array for its size (T-ARR-903).
+// ===========================================================================
+
+print "== Higher-order functions =="
+
+var map := func(a, n, f) is
+    var r := []
+    for i in 1..n loop
+        r[i] := f(a[i])
+    end
+    return r
+end
+
+var filter := func(a, n, p) is
+    var r := []
+    var k := 0
+    for i in 1..n loop
+        if p(a[i]) then
+            k := k + 1
+            r[k] := a[i]
+        end
+    end
+    return {items := r, count := k}
+end
+
+var reduce := func(a, n, f, init) is
+    var acc := init
+    for i in 1..n loop
+        acc := f(acc, a[i])
+    end
+    return acc
+end
+
+var each := func(a, n, f) is
+    for i in 1..n loop
+        f(a[i])
+    end
+end
+
+// --- the data ---
+
+var a := [1, 2, 3, 4, 5, 6, 7, 8]
+var n := 8
+
+print "== map =="
+
+var double := func(x) => x * 2
+var doubled := map(a, n, double)
+each(doubled, n, func(v) is print v end)
+// expect 2 4 6 8 10 12 14 16
+
+var square := func(x) => x * x
+var squared := map(a, n, square)
+each(squared, n, func(v) is print v end)
+// expect 1 4 9 16 25 36 49 64
+
+print "== filter =="
+
+var isEven := func(x) => 2 * (x / 2) = x
+var evens := filter(a, n, isEven)
+print "kept", evens.count         // expect 4
+each(evens.items, evens.count, func(v) is print v end)
+// expect 2 4 6 8
+
+var isBig := func(x) => x > 5
+var big := filter(a, n, isBig)
+print "kept", big.count           // expect 3
+each(big.items, big.count, func(v) is print v end)
+// expect 6 7 8
+
+print "== reduce =="
+
+var add := func(acc, x) => acc + x
+print "sum", reduce(a, n, add, 0)            // expect 36
+
+var mul := func(acc, x) => acc * x
+print "product", reduce(a, n, mul, 1)        // expect 40320
+
+var larger := func(acc, x) is
+    if x > acc then return x end
+    return acc
+end
+print "max", reduce(a, n, larger, a[1])      // expect 8
+
+print "== composition =="
+
+// --- map, then filter, then reduce, chained through the results ---
+
+var step1 := map(a, n, square)               // 1 4 9 16 25 36 49 64
+var step2 := filter(step1, n, isBig)         // 9 16 25 36 49 64
+print "kept", step2.count                    // expect 6
+print "sum of the squares above 5", reduce(step2.items, step2.count, add, 0)
+// expect 199
+
+print "== a function that builds a function =="
+
+// --- adderFor returns a function; the returned literal uses only its own
+//     parameter, so it needs no capture ---
+
+var applyTwice := func(f, x) => f(f(x))
+print applyTwice(double, 5)                  // expect 20
+print applyTwice(square, 3)                  // expect 81
+
+// --- functions stored in an array and dispatched by index ---
+
+var ops := [double, square, func(x) => x + 100]
+print ops[1](7)                              // expect 14
+print ops[2](7)                              // expect 49
+print ops[3](7)                              // expect 107
+
+// --- functions stored in a tuple and dispatched by name ---
+
+var lib := {twice := double, sq := square}
+print lib.twice(6)                           // expect 12
+print lib.sq(6)                              // expect 36
+
+print "== end =="

@@ -1,0 +1,195 @@
+// ===========================================================================
+// Block 07 — Division (/)
+// Description : 07-op-division.md
+// Spec        : Language D.md §8.4 Division
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// "Round down" is floor (Q7): -7 / 2 is -4. Division by zero is a runtime
+// error in every form (Q6); those tests are in the negative section.
+//
+// Relies on: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 07 — Division =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types --"
+// --------------------------------------------------------------------------
+
+// T-DIV-001  Integer / Integer -> Integer   expect 3
+print 6 / 2
+
+// T-DIV-002  Integer / Real -> Real         expect 3.5
+print 7 / 2.0
+
+// T-DIV-003  Real / Integer -> Real         expect 3.5
+print 7.0 / 2
+
+// T-DIV-004  Real / Real -> Real            expect 3.5
+print 7.0 / 2.0
+
+// T-DIV-005  operand types are checked dynamically   expect 3
+if true then
+    var a := 6, b := 2
+    print a / b
+end
+
+// T-DIV-006  identity                       expect 5
+print 5 / 1
+
+// --------------------------------------------------------------------------
+print "-- 2xx integer division rounds down --"
+// --------------------------------------------------------------------------
+
+// T-DIV-201  rounded down, not 3.5          expect 3
+print 7 / 2
+
+// T-DIV-202  expect 0
+print 1 / 2
+
+// T-DIV-203  expect 0
+print 9 / 10
+
+// T-DIV-204  one Real operand suppresses the rounding   expect 3.5
+print 7 / 2.0
+
+// T-DIV-205  floor toward negative infinity (Q7)   expect -4
+print -7 / 2
+
+// T-DIV-206  floor (Q7)                     expect -4
+print 7 / -2
+
+// T-DIV-207  expect 3
+print -7 / -2
+
+// T-DIV-208  exact division is unaffected   expect 2
+print 6 / 3
+
+// T-DIV-209  floor, not 0                   expect -1
+print -1 / 2
+
+// T-DIV-210  exact negative division        expect -2
+print -6 / 3
+
+// --------------------------------------------------------------------------
+print "-- 3xx precedence and associativity --"
+// --------------------------------------------------------------------------
+
+// T-DIV-301  left associative, not 100 / (10 / 2) = 20   expect 5
+print 100 / 10 / 2
+
+// T-DIV-302  same level as *, left to right              expect 3
+print 2 * 6 / 4
+
+// T-DIV-303  6/4 = 1 first, then * 2                     expect 2
+print 6 / 4 * 2
+
+// T-DIV-304  / binds tighter than +                      expect 4
+print 1 + 6 / 2
+
+// T-DIV-305  parentheses override                        expect 3
+print (1 + 6) / 2
+
+print "== end of block 07 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// --- 1a. operand kinds / never accepts ---
+
+// T-DIV-101  runtime error
+// print true / false
+
+// T-DIV-102  runtime error
+// print true / 2
+
+// T-DIV-103  runtime error
+// print 2 / true
+
+// T-DIV-104  runtime error
+// var f := func => 0
+// print f / 2
+
+// T-DIV-105  runtime error
+// var f := func => 0
+// print f / f
+
+// T-DIV-106  runtime error: none cannot act as an operand
+// var n
+// print n / 2
+
+// T-DIV-107  runtime error
+// var n
+// print 2 / n
+
+// --- 1b. counterparts of the cases addition allows ---
+
+// T-DIV-110  runtime error   (cf. T-ADD-005)
+// print "ab" / "b"
+
+// T-DIV-111  runtime error   (cf. T-ADD-006)
+// print [1,2] / [2]
+
+// T-DIV-112  runtime error   (cf. T-ADD-007)
+// print {a := 1} / {b := 2}
+
+// --- 1c. mismatched pairs ---
+
+// T-DIV-120  runtime error
+// print "ab" / 2
+
+// T-DIV-121  runtime error
+// print 2 / "ab"
+
+// T-DIV-122  runtime error
+// print 1.5 / "s"
+
+// T-DIV-123  runtime error
+// print [1] / 2
+
+// T-DIV-124  runtime error
+// print 2 / [1]
+
+// T-DIV-125  runtime error
+// print {a := 1} / 2
+
+// T-DIV-126  runtime error
+// print [1] / {a := 1}
+
+// T-DIV-127  runtime error
+// print true / [1]
+
+// --- 4xx division by zero: always a runtime error (Q6) ---
+
+// T-DIV-401  runtime error
+// print 1 / 0
+
+// T-DIV-402  runtime error: real division too
+// print 1 / 0.0
+
+// T-DIV-403  runtime error
+// print 1.0 / 0
+
+// T-DIV-404  runtime error
+// print 0 / 0
+
+// T-DIV-405  runtime error: no NaN
+// print 0.0 / 0.0
+
+// T-DIV-406  runtime error: the divisor is checked at run time
+// var z := 0
+// print 5 / z
+
+// T-DIV-407  prints a, then runtime error: output before the error stays
+// print "a"; print 1 / 0
+
+// --- 9xx ---
+
+// T-DIV-903  runtime error: the one integer division that overflows (Q27)
+// print (-9223372036854775807 - 1) / -1

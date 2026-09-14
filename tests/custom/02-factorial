@@ -1,0 +1,60 @@
+// ===========================================================================
+// Custom 02 — Factorial
+// Exercises: nested for range loops, accumulation, integer growth,
+//            recursion (Q19)
+//
+// 21! overflows a signed 64-bit integer, which is a runtime error (Q27), so
+// the table stops at 12! and the recursive check goes up to 20!.
+// ===========================================================================
+
+print "== Factorial =="
+
+// --- 0! through 12! ---
+
+for n in 0..12 loop
+    var f := 1
+    for k in 2..n loop
+        f := f * k
+    end
+    print n, f
+end
+// expect
+//  0 1
+//  1 1
+//  2 2
+//  3 6
+//  4 24
+//  5 120
+//  6 720
+//  7 5040
+//  8 40320
+//  9 362880
+// 10 3628800
+// 11 39916800
+// 12 479001600
+
+// Note: `for k in 2..n` with n = 0 or n = 1 asks for the ranges 2..0 and 2..1,
+// which run zero times (Q37) — that is what makes the first two lines print 1.
+
+// --- factorial as a running product ---
+
+var f := 1
+var n := 1
+while n <= 10 loop
+    f := f * n
+    print n, f
+    n := n + 1
+end
+// expect the same values, 1! through 10!
+
+// --- the recursive definition (Q19) ---
+
+var fact := func(n) is
+    if n <= 1 then return 1 end
+    return n * fact(n - 1)
+end
+print "recursive 10! is", fact(10)            // expect 3628800
+print "recursive 20! is", fact(20)            // expect 2432902008176640000
+print "iterative and recursive agree:", fact(10) = f    // expect true
+
+print "== end =="

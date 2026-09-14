@@ -1,0 +1,204 @@
+// ===========================================================================
+// Block 17 — Print
+// Description : 17-stmt-print.md
+// Spec        : Language D.md §4.8 Print
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// The output format is decided by Q15 (Language D.md §4.8): one space between
+// values, one newline per print, reals always with a dot, strings without
+// quotes, [1, 2], {a := 1, 2}, func, none. Section 4xx verifies each rule.
+// ===========================================================================
+
+print "== Block 17 — Print =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx single expression --"
+// --------------------------------------------------------------------------
+
+// T-PRN-001  expect 1
+print 1
+
+// T-PRN-002  expect Hello, without the quotes
+print "Hello"
+
+// T-PRN-003  quote style does not affect the output   expect Hello
+print 'Hello'
+
+// T-PRN-004  expect true
+print true
+
+// T-PRN-005  expect 1.5
+print 1.5
+
+// T-PRN-006  the argument is an expression   expect 3
+print 1 + 2
+
+// T-PRN-007  the argument is a reference     expect 5
+if true then
+    var a := 5
+    print a
+end
+
+// T-PRN-008  the argument is a call          expect 7
+if true then
+    var f := func => 7
+    print f()
+end
+
+// T-PRN-009  a boolean result                expect true
+print 1 < 2
+
+// T-PRN-010  an array element                expect 1
+if true then
+    var a := [1]
+    print a[1]
+end
+
+// T-PRN-011  a tuple element                 expect 2
+if true then
+    var t := {x := 2}
+    print t.x
+end
+
+// --------------------------------------------------------------------------
+print "-- 1xx several expressions --"
+// --------------------------------------------------------------------------
+
+// T-PRN-101  three values on one line   expect 1 2 3
+print 1, 2, 3
+
+// T-PRN-102  the string's own trailing space plus the separator   expect sum =  3
+print "sum = ", 1 + 2
+
+// T-PRN-103  expect 1 2
+if true then
+    var a := 1, b := 2
+    print a, b
+end
+
+// T-PRN-104  values of different types   expect 1 s true 1.5
+print 1, "s", true, 1.5
+
+// T-PRN-109  printing none is allowed (Q31)   expect none
+if true then
+    var n
+    print n
+end
+
+// --------------------------------------------------------------------------
+print "-- 2xx sequencing --"
+// --------------------------------------------------------------------------
+
+// T-PRN-201  each statement ends its own output   expect 1 then 2 on separate lines
+print 1
+print 2
+
+// T-PRN-202  separator style does not change the output   expect 1 then 2
+print 1; print 2
+
+// T-PRN-203  one line per iteration   expect 1 2 3
+for i in 1..3 loop print i end
+
+// T-PRN-204  the argument is evaluated first   expect in then 1
+if true then
+    var f := func is print "in"; return 1 end
+    print f()
+end
+
+// T-PRN-205  the comma list never breaks the line   expect 1 2
+print 1, 2
+
+// --------------------------------------------------------------------------
+print "-- 4xx output format (Q15) --"
+// --------------------------------------------------------------------------
+
+// T-PRN-401  one space between values   expect 1 2
+print 1, 2
+
+// T-PRN-402  a real always carries a dot   expect 3.0
+print 3.0
+
+// T-PRN-403  shortest round-trip digits   expect 0.3333333333333333
+print 1.0 / 3.0
+
+// T-PRN-404  array rendering   expect [1, 2]
+print [1, 2]
+
+// T-PRN-405  tuple rendering, named element   expect {a := 1}
+print {a := 1}
+
+// T-PRN-406  a function value   expect func
+print func => 0
+
+// T-PRN-407  none   expect none
+if true then
+    var n
+    print n
+end
+
+// T-PRN-408  the newline is still written   expect an empty line
+print ""
+
+// T-PRN-409  ascending key order, gaps not shown   expect [1]
+if true then
+    var t := []
+    t[10] := 1
+    print t
+end
+
+// T-PRN-410  nested arrays use the same rule   expect [[1], [2]]
+print [[1],[2]]
+
+// T-PRN-411  strings inside composites have no quotes   expect [a, b]
+print ["a", 'b']
+
+// T-PRN-412  unnamed elements as the bare value   expect {1, b := 2.5, s, [true]}
+print {1, b := 2.5, "s", [true]}
+
+// T-PRN-413  the empty array   expect []
+print []
+
+// T-PRN-414  sign, whole real, short fraction   expect -0.5 100.0 0.1
+print -0.5, 100.0, 0.1
+
+// T-PRN-415  no exponent form   expect 1000000000000.0
+print 1000000.0 * 1000000.0
+
+// T-PRN-416  none inside a composite   expect [none]
+print [none]
+
+// T-PRN-417  a function inside a composite   expect {f := func}
+print {f := func => 0}
+
+// T-PRN-418  an empty string still gets its separators   expect a  b  (two spaces)
+print "a", "", "b"
+
+// T-PRN-419  the type decides the rendering, not the value   expect 6.0
+print 2.0 * 3
+
+print "== end of block 17 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// T-PRN-105  syntax error: at least one expression is required
+// print
+
+// T-PRN-106  syntax error: trailing comma
+// print 1,
+
+// T-PRN-107  syntax error: missing comma
+// print 1 2
+
+// T-PRN-108  syntax error
+// print ,1
+
+// T-PRN-206  runtime error and NOTHING printed: all arguments are evaluated
+//            before anything is written
+// print 1, 1 / 0

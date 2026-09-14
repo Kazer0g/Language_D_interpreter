@@ -1,0 +1,104 @@
+// ===========================================================================
+// Custom 09 — Reverse an array, and test for a palindrome
+// Exercises: index arithmetic, building a new array, early exit from a loop,
+//            in-place reversal by swapping from both ends
+// ===========================================================================
+
+print "== Reverse =="
+
+var a := [1, 2, 3, 4, 5]
+
+var n := 0
+for v in a loop
+    n := n + 1
+end
+
+// --- reverse into a NEW array, leaving the original alone ---
+
+var r := []
+for i in 1..n loop
+    r[i] := a[n + 1 - i]
+end
+
+for v in r loop
+    print v
+end
+// expect 5 4 3 2 1
+
+for v in a loop
+    print v
+end
+// expect 1 2 3 4 5 — the original is untouched
+
+// --- reverse IN PLACE by swapping from both ends ---
+
+var b := [10, 20, 30, 40, 50, 60]
+var m := 0
+for v in b loop
+    m := m + 1
+end
+
+for i in 1..m / 2 loop
+    var j := m + 1 - i
+    var tmp := b[i]
+    b[i] := b[j]
+    b[j] := tmp
+end
+
+for v in b loop
+    print v
+end
+// expect 60 50 40 30 20 10
+
+print "== Palindrome =="
+
+// --- a palindrome ---
+
+var p := [1, 2, 3, 2, 1]
+var np := 0
+for v in p loop
+    np := np + 1
+end
+
+var isPal := true
+for i in 1..np / 2 loop
+    if p[i] /= p[np + 1 - i] then
+        isPal := false
+        exit
+    end
+end
+print "1 2 3 2 1 is a palindrome:", isPal            // expect true
+
+// --- not a palindrome ---
+
+var q := [1, 2, 3, 4]
+var nq := 0
+for v in q loop
+    nq := nq + 1
+end
+
+var isPal2 := true
+for i in 1..nq / 2 loop
+    if q[i] /= q[nq + 1 - i] then
+        isPal2 := false
+        exit
+    end
+end
+print "1 2 3 4 is a palindrome:", isPal2             // expect false
+
+// --- a single element is always a palindrome ---
+
+var s := [7]
+var ns := 0
+for v in s loop
+    ns := ns + 1
+end
+var isPal3 := true
+for i in 1..ns / 2 loop
+    if s[i] /= s[ns + 1 - i] => isPal3 := false
+end
+print "a single element is a palindrome:", isPal3    // expect true
+// Note: ns / 2 is 0 here, so the loop header is 1..0, which runs zero times
+// (Q37) — that is what leaves isPal3 true.
+
+print "== end =="

@@ -1,0 +1,284 @@
+// ===========================================================================
+// Block 08 — Comparisons (< > <= >= = /=)
+// Description : 08-op-comparison.md
+// Spec        : Language D.md §8.5 Comparisons, §5.2 Relation
+//
+// Every runnable test of the block, in ID order. Each test is preceded by its
+// ID and the value it must print.
+//
+// Negative tests are listed commented out at the end: each one aborts the
+// program, so they cannot share a run. Uncomment one at a time.
+//
+// Decision Q5: = and /= are extended to String = String and Boolean = Boolean.
+// The ordering operators stay numeric-only; arrays, tuples, functions and none
+// are never comparable. T-CMP-102 and T-CMP-104 therefore run as positives.
+//
+// Relies on: a branch body is a scope (Language D.md §3.2).
+// ===========================================================================
+
+print "== Block 08 — Comparisons =="
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types: < --"
+// --------------------------------------------------------------------------
+
+// T-CMP-001  Integer, Integer   expect true
+print 1 < 2
+
+// T-CMP-002  Integer, Real      expect true
+print 1 < 1.5
+
+// T-CMP-003  Real, Integer      expect false
+print 2.5 < 2
+
+// T-CMP-004  Real, Real         expect true
+print 1.5 < 2.5
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types: > --"
+// --------------------------------------------------------------------------
+
+// T-CMP-005  Integer, Integer   expect true
+print 2 > 1
+
+// T-CMP-006  Integer, Real      expect true
+print 2 > 1.5
+
+// T-CMP-007  Real, Integer      expect false
+print 1.5 > 2
+
+// T-CMP-008  Real, Real         expect true
+print 2.5 > 1.5
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types: <= --"
+// --------------------------------------------------------------------------
+
+// T-CMP-009  boundary                    expect true
+print 2 <= 2
+
+// T-CMP-010  boundary after widening     expect true
+print 2 <= 2.0
+
+// T-CMP-011  Real, Integer               expect false
+print 2.5 <= 2
+
+// T-CMP-012  Real, Real                  expect true
+print 2.0 <= 2.0
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types: >= --"
+// --------------------------------------------------------------------------
+
+// T-CMP-013  boundary                    expect true
+print 2 >= 2
+
+// T-CMP-014  Integer, Real               expect false
+print 2 >= 2.5
+
+// T-CMP-015  boundary after widening     expect true
+print 2.0 >= 2
+
+// T-CMP-016  Real, Real                  expect false
+print 1.5 >= 2.5
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types: = --"
+// --------------------------------------------------------------------------
+
+// T-CMP-017  Integer, Integer            expect true
+print 3 = 3
+
+// T-CMP-018  widened before comparison   expect true
+print 3 = 3.0
+
+// T-CMP-019  Real, Integer               expect false
+print 3.5 = 3
+
+// T-CMP-020  Real, Real                  expect true
+print 3.5 = 3.5
+
+// --------------------------------------------------------------------------
+print "-- 0xx supported types: /= --"
+// --------------------------------------------------------------------------
+
+// T-CMP-021  Integer, Integer            expect true
+print 3 /= 4
+
+// T-CMP-022  widened before comparison   expect false
+print 3 /= 3.0
+
+// T-CMP-023  Real, Integer               expect true
+print 3.5 /= 3
+
+// T-CMP-024  Real, Real                  expect false
+print 3.5 /= 3.5
+
+// --------------------------------------------------------------------------
+print "-- 02x the result is always boolean --"
+// --------------------------------------------------------------------------
+
+// T-CMP-025  expect true
+if true then
+    var r := 1 < 2
+    print r is bool
+end
+
+// T-CMP-026  operand types are checked dynamically   expect true
+if true then
+    var a := 1, b := 2
+    print a < b
+end
+
+// --------------------------------------------------------------------------
+print "-- 03x extended cells: = and /= on strings and booleans (Q5) --"
+// --------------------------------------------------------------------------
+
+// T-CMP-027  String = String                 expect true
+print "a" = "a"
+
+// T-CMP-028  String = String                 expect false
+print "a" = "b"
+
+// T-CMP-029  String /= String                expect true
+print "a" /= "b"
+
+// T-CMP-030  quote style is not part of the value   expect true
+print 'a' = "a"
+
+// T-CMP-031  empty strings are equal         expect true
+print "" = ""
+
+// T-CMP-032  exact, case-sensitive           expect false
+print "A" = "a"
+
+// T-CMP-033  Boolean = Boolean               expect true
+print true = true
+
+// T-CMP-034  Boolean = Boolean               expect false
+print true = false
+
+// T-CMP-035  Boolean /= Boolean              expect true
+print true /= false
+
+// T-CMP-036  compares the resulting value    expect true
+if true then
+    var s := "ab"
+    print s = "a" + "b"
+end
+
+// T-CMP-102  (moved from 1xx by Q5)          expect false
+print true = false
+
+// T-CMP-104  (moved from 1xx by Q5)          expect true
+print "a" = "a"
+
+// --------------------------------------------------------------------------
+print "-- 3xx relation structure --"
+// --------------------------------------------------------------------------
+
+// T-CMP-303  chaining is expressed with a logical operator   expect true
+print (1 < 2) and (2 < 3)
+
+// T-CMP-304  Factor binds tighter than the comparison        expect true
+print 1 + 1 < 3
+
+// T-CMP-305  comparison binds tighter than and               expect true
+print 1 < 2 and 3 < 4
+
+// T-CMP-306  Term binds tighter than the comparison          expect true
+print 2 * 2 = 4
+
+// T-CMP-307  a Relation may be a bare Factor                 expect 1
+print 1
+
+// --------------------------------------------------------------------------
+print "-- 9xx decided --"
+// --------------------------------------------------------------------------
+
+// T-CMP-902  IEEE doubles compare exactly (Q28)   expect false
+print 0.1 + 0.2 = 0.3
+
+// T-CMP-903  a boolean expression result is comparable (Q5)   expect true
+print (1 < 2) = true
+
+print "== end of block 08 =="
+
+// ===========================================================================
+// Negative tests — each aborts the program, run one at a time
+// ===========================================================================
+
+// --- 1a. operand kinds comparison never accepts ---
+
+// T-CMP-101  runtime error: no ordering of booleans
+// print true < false
+
+// T-CMP-103  runtime error: no ordering of strings
+// print "a" < "b"
+
+// T-CMP-105  runtime error: no array equality
+// print [1] = [1]
+
+// T-CMP-106  runtime error
+// print [1] < [2]
+
+// T-CMP-107  runtime error: no tuple equality
+// print {a := 1} = {a := 1}
+
+// T-CMP-108  runtime error: the only operation on a function is a call
+// var f := func => 0
+// print f = f
+
+// T-CMP-109  runtime error: none cannot act as an operand
+// var n
+// print n = 1
+
+// T-CMP-110  runtime error: even none to none
+// var n, m
+// print n = m
+
+// T-CMP-111  runtime error: <= is ordering, not extended
+// print "a" <= "a"
+
+// T-CMP-112  runtime error
+// print true >= false
+
+// --- 1b. mismatched pairs ---
+
+// T-CMP-120  runtime error
+// print 1 < "2"
+
+// T-CMP-121  runtime error
+// print "2" > 1
+
+// T-CMP-122  runtime error
+// print 1 = "1"
+
+// T-CMP-123  runtime error
+// print 1 = true
+
+// T-CMP-124  runtime error
+// print 1.5 /= true
+
+// T-CMP-125  runtime error
+// print 1 < [1]
+
+// T-CMP-126  runtime error
+// print [1] = {a := 1}
+
+// T-CMP-127  runtime error
+// print "s" = [1]
+
+// T-CMP-128  runtime error: string and boolean do not mix
+// print "true" = true
+
+// T-CMP-129  runtime error
+// print "1" = 1.0
+
+// --- 3xx comparisons do not chain ---
+
+// T-CMP-301  syntax error: Relation allows at most one comparison
+// print 1 < 2 < 3
+
+// T-CMP-302  syntax error
+// print 1 = 2 = 3
