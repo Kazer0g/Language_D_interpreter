@@ -240,24 +240,11 @@ struct Lexer {
         string text;
 
         while (true) {
-            if (atEnd()) fail("not closed string");
+            if (atEnd() || peek() == '\n') fail("unterminated string");
 
             char c = peek();
             if (c == quote) { advance(); break; }
 
-            if (c == '\\') {
-                advance();
-                if (atEnd()) fail("unterminated escape sequence");
-                char e = advance();
-                if      (e == 'n')  text += '\n';
-                else if (e == 't')  text += '\t';
-                else if (e == 'r')  text += '\r';
-                else if (e == '\\') text += '\\';
-                else if (e == '"')  text += '"';
-                else if (e == '\'') text += '\'';
-                else fail(string("unknown escape sequence: \\") + e);
-                continue;
-            }
             text += advance();
         }
         add(T_STRING, text);

@@ -13,7 +13,7 @@
 // `if true then ... end` isolates each test's declarations.
 // ===========================================================================
 
-print "== Block 02 — Declarations and Scope =="
+print "== Block 02 - Declarations and Scope =="
 
 // --------------------------------------------------------------------------
 print "-- 0xx valid declarations --"

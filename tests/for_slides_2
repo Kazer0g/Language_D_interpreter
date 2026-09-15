@@ -1,0 +1,9 @@
+// FOR SLIDE 1
+
+print 12.34
+
+if true then
+    var f := func(x) => x + 1
+    print f(1)
+end
+

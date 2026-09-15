@@ -1,0 +1,8 @@
+// For slides 2
+
+// It's ok
+print {a := 1}
+
+// It's not ok
+print "abc
+123"
