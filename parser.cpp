@@ -674,177 +674,158 @@ struct Parser {
 // ============================================================================
 // === ПЕЧАТЬ ДЕРЕВА ===
 // ============================================================================
+//
+// Два шага. Сначала AST переводится в простое дерево подписей (TreeNode:
+// строка + дети). Потом printTree рисует его линиями, как команда tree:
+//
+//   Program
+//   ├── Declaration
+//   │   └── x :=
+//   │       └── Int 1
+//   └── Print
+//       └── Name x
 
-void printStmts(const vector<Stmt*>& list, int indent);
+struct TreeNode {
+    string label;
+    vector<TreeNode> kids = {};   // у листа детей нет: {"Int 1"} — это лист
+};
 
-string pad(int indent) { return string(indent * 2, ' '); }
+TreeNode stmtTree(Stmt* s);
 
-void printExpr(Expr* e, int indent) {
-    string p = pad(indent);
+vector<TreeNode> stmtTrees(const vector<Stmt*>& list) {
+    vector<TreeNode> kids;
+    for (Stmt* s : list) kids.push_back(stmtTree(s));
+    return kids;
+}
+
+TreeNode exprTree(Expr* e) {
     switch (e->kind) {
-        case E_INT:    cout << p << "Int " << e->intValue << "\n"; break;
-        case E_REAL:   cout << p << "Real " << e->text << "\n"; break;
-        case E_STRING: cout << p << "String \"" << e->text << "\"\n"; break;
-        case E_BOOL:   cout << p << "Bool " << (e->boolValue ? "true" : "false") << "\n"; break;
-        case E_NONE:   cout << p << "None\n"; break;
+        case E_INT:    return {"Int " + to_string(e->intValue)};
+        case E_REAL:   return {"Real " + e->text};
+        case E_STRING: return {"String \"" + e->text + "\""};
+        case E_BOOL:   return {e->boolValue ? "Bool true" : "Bool false"};
+        case E_NONE:   return {"None"};
 
-        case E_ARRAY:
-            cout << p << "Array (" << e->items.size() << " elements)\n";
-            for (Expr* item : e->items) printExpr(item, indent + 1);
-            break;
-
-        case E_TUPLE:
-            cout << p << "Tuple\n";
-            for (size_t i = 0; i < e->items.size(); i++) {
-                if (e->names[i] != "") {
-                    cout << pad(indent + 1) << e->names[i] << " :=\n";
-                    printExpr(e->items[i], indent + 2);
-                } else {
-                    printExpr(e->items[i], indent + 1);
-                }
-            }
-            break;
-
-        case E_FUNC: {
-            cout << p << "Function (";
-            for (size_t i = 0; i < e->names.size(); i++)
-                cout << (i ? ", " : "") << e->names[i];
-            cout << ")\n";
-            if (e->bodyExpr) {
-                cout << pad(indent + 1) << "=>\n";
-                printExpr(e->bodyExpr, indent + 2);
-            } else {
-                cout << pad(indent + 1) << "is\n";
-                printStmts(e->body, indent + 2);
-            }
-            break;
+        case E_ARRAY: {
+            TreeNode n = {"Array (" + to_string(e->items.size()) + " elements)"};
+            for (Expr* item : e->items) n.kids.push_back(exprTree(item));
+            return n;
         }
 
-        case E_NAME: cout << p << "Name " << e->text << "\n"; break;
+        case E_TUPLE: {
+            TreeNode n = {"Tuple"};
+            for (size_t i = 0; i < e->items.size(); i++) {
+                if (e->names[i] != "") n.kids.push_back({e->names[i] + " :=", {exprTree(e->items[i])}});
+                else                   n.kids.push_back(exprTree(e->items[i]));
+            }
+            return n;
+        }
+
+        case E_FUNC: {
+            string params;
+            for (size_t i = 0; i < e->names.size(); i++)
+                params += (i ? ", " : "") + e->names[i];
+            TreeNode n = {"Function (" + params + ")"};
+            if (e->bodyExpr) n.kids.push_back({"=>", {exprTree(e->bodyExpr)}});
+            else             n.kids.push_back({"is", stmtTrees(e->body)});
+            return n;
+        }
+
+        case E_NAME: return {"Name " + e->text};
 
         case E_INDEX:
-            cout << p << "Index\n";
-            printExpr(e->target, indent + 1);
-            printExpr(e->index, indent + 1);
-            break;
+            return {"Index", {exprTree(e->target), exprTree(e->index)}};
 
-        case E_CALL:
-            cout << p << "Call (" << e->items.size() << " args)\n";
-            printExpr(e->target, indent + 1);
-            for (Expr* arg : e->items) printExpr(arg, indent + 1);
-            break;
+        case E_CALL: {
+            TreeNode n = {"Call (" + to_string(e->items.size()) + " args)", {exprTree(e->target)}};
+            for (Expr* arg : e->items) n.kids.push_back(exprTree(arg));
+            return n;
+        }
 
-        case E_FIELD:
-            cout << p << "Field ." << e->text << "\n";
-            printExpr(e->target, indent + 1);
-            break;
-
-        case E_POSITION:
-            cout << p << "Position ." << e->intValue << "\n";
-            printExpr(e->target, indent + 1);
-            break;
-
-        case E_UNARY:
-            cout << p << "Unary " << tokenName(e->op) << "\n";
-            printExpr(e->operand, indent + 1);
-            break;
-
-        case E_BINARY:
-            cout << p << "Binary " << tokenName(e->op) << "\n";
-            printExpr(e->left, indent + 1);
-            printExpr(e->right, indent + 1);
-            break;
-
-        case E_IS:
-            cout << p << "Is " << e->text << "\n";
-            printExpr(e->operand, indent + 1);
-            break;
+        case E_FIELD:    return {"Field ." + e->text, {exprTree(e->target)}};
+        case E_POSITION: return {"Position ." + to_string(e->intValue), {exprTree(e->target)}};
+        case E_UNARY:    return {"Unary " + tokenName(e->op), {exprTree(e->operand)}};
+        case E_BINARY:   return {"Binary " + tokenName(e->op), {exprTree(e->left), exprTree(e->right)}};
+        case E_IS:       return {"Is " + e->text, {exprTree(e->operand)}};
     }
+    return {"?"};
 }
 
-void printStmt(Stmt* s, int indent) {
-    string p = pad(indent);
+TreeNode stmtTree(Stmt* s) {
     switch (s->kind) {
-        case S_VAR:
-            cout << p << "Declaration\n";
+        case S_VAR: {
+            TreeNode n = {"Declaration"};
             for (size_t i = 0; i < s->names.size(); i++) {
-                if (s->values[i]) {
-                    cout << pad(indent + 1) << s->names[i] << " :=\n";
-                    printExpr(s->values[i], indent + 2);
-                } else {
-                    cout << pad(indent + 1) << s->names[i] << " (none)\n";
-                }
+                if (s->values[i]) n.kids.push_back({s->names[i] + " :=", {exprTree(s->values[i])}});
+                else              n.kids.push_back({s->names[i] + " (none)"});
             }
-            break;
+            return n;
+        }
 
-        case S_ASSIGN:
-            cout << p << "Assignment\n";
-            printExpr(s->target, indent + 1);
-            cout << pad(indent + 1) << ":=\n";
-            printExpr(s->value, indent + 2);
-            break;
+        case S_ASSIGN: {
+            TreeNode n = {"Assignment", {exprTree(s->target)}};
+            n.kids.push_back({":=", {exprTree(s->value)}});
+            return n;
+        }
 
-        case S_IF:
-            cout << p << (s->isShort ? "IfShort\n" : "If\n");
-            cout << pad(indent + 1) << "condition\n";
-            printExpr(s->cond, indent + 2);
-            cout << pad(indent + 1) << "then\n";
-            printStmts(s->thenBody, indent + 2);
-            if (!s->elseBody.empty()) {
-                cout << pad(indent + 1) << "else\n";
-                printStmts(s->elseBody, indent + 2);
-            }
-            break;
+        case S_IF: {
+            TreeNode n = {s->isShort ? "IfShort" : "If"};
+            n.kids.push_back({"condition", {exprTree(s->cond)}});
+            n.kids.push_back({"then", stmtTrees(s->thenBody)});
+            if (!s->elseBody.empty()) n.kids.push_back({"else", stmtTrees(s->elseBody)});
+            return n;
+        }
 
-        case S_WHILE:
-            cout << p << "While\n";
-            cout << pad(indent + 1) << "condition\n";
-            printExpr(s->cond, indent + 2);
-            cout << pad(indent + 1) << "body\n";
-            printStmts(s->body, indent + 2);
-            break;
+        case S_WHILE: {
+            TreeNode n = {"While"};
+            n.kids.push_back({"condition", {exprTree(s->cond)}});
+            n.kids.push_back({"body", stmtTrees(s->body)});
+            return n;
+        }
 
-        case S_FOR:
-            cout << p << "For" << (s->loopVar != "" ? " " + s->loopVar : "") << "\n";
+        case S_FOR: {
+            TreeNode n = {"For" + (s->loopVar != "" ? " " + s->loopVar : "")};
             if (s->to) {
-                cout << pad(indent + 1) << "from\n";
-                printExpr(s->from, indent + 2);
-                cout << pad(indent + 1) << "to\n";
-                printExpr(s->to, indent + 2);
+                n.kids.push_back({"from", {exprTree(s->from)}});
+                n.kids.push_back({"to", {exprTree(s->to)}});
             } else {
-                cout << pad(indent + 1) << "over\n";
-                printExpr(s->from, indent + 2);
+                n.kids.push_back({"over", {exprTree(s->from)}});
             }
-            cout << pad(indent + 1) << "body\n";
-            printStmts(s->body, indent + 2);
-            break;
+            n.kids.push_back({"body", stmtTrees(s->body)});
+            return n;
+        }
 
-        case S_LOOP:
-            cout << p << "Loop (infinite)\n";
-            printStmts(s->body, indent + 1);
-            break;
+        case S_LOOP: return {"Loop (infinite)", stmtTrees(s->body)};
+        case S_EXIT: return {"Exit"};
 
-        case S_EXIT:
-            cout << p << "Exit\n";
-            break;
+        case S_RETURN: {
+            TreeNode n = {"Return"};
+            if (s->value) n.kids.push_back(exprTree(s->value));
+            return n;
+        }
 
-        case S_RETURN:
-            cout << p << "Return\n";
-            if (s->value) printExpr(s->value, indent + 1);
-            break;
+        case S_PRINT: {
+            TreeNode n = {"Print"};
+            for (Expr* v : s->values) n.kids.push_back(exprTree(v));
+            return n;
+        }
 
-        case S_PRINT:
-            cout << p << "Print\n";
-            for (Expr* v : s->values) printExpr(v, indent + 1);
-            break;
+        case S_CALL: return {"CallStatement", {exprTree(s->value)}};
+    }
+    return {"?"};
+}
 
-        case S_CALL:
-            cout << p << "CallStatement\n";
-            printExpr(s->value, indent + 1);
-            break;
+// prefix — линии от предков: "│   " под предком, у которого ниже ещё есть
+// братья, и "    " под предком, который был последним.
+void printKids(const TreeNode& n, string prefix) {
+    for (size_t i = 0; i < n.kids.size(); i++) {
+        bool last = (i + 1 == n.kids.size());
+        cout << prefix << (last ? "└── " : "├── ") << n.kids[i].label << "\n";
+        printKids(n.kids[i], prefix + (last ? "    " : "│   "));
     }
 }
 
-void printStmts(const vector<Stmt*>& list, int indent) {
-    for (Stmt* s : list) printStmt(s, indent);
+void printTree(const TreeNode& root) {
+    cout << root.label << "\n";
+    printKids(root, "");
 }

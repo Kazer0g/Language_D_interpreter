@@ -12,6 +12,13 @@
 #include "lexer.cpp"
 #include "parser.cpp"
 
+// Линии дерева (├── │ └──) печатаются в UTF-8. Консоль Windows по умолчанию
+// в другой кодировке и покажет кракозябры, поэтому переключаем её на UTF-8.
+// Функция из kernel32, объявлена вручную, чтобы не тянуть <windows.h>.
+#ifdef _WIN32
+extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(unsigned int codePage);
+#endif
+
 string readFile(string path) {
     ifstream file(path);
     if (!file) throw runtime_error("cannot open file: " + path);
@@ -21,6 +28,10 @@ string readFile(string path) {
 }
 
 int main(int argc, char** argv) {
+#ifdef _WIN32
+    SetConsoleOutputCP(65001);   // 65001 = UTF-8
+#endif
+
     bool onlyTokens = false;
     string path = "";
 
@@ -52,8 +63,7 @@ int main(int argc, char** argv) {
 
         // 3. Интерпретатор: дерево -> выполнение (будет следующим шагом).
         //    Пока просто печатаем дерево.
-        cout << "Program\n";
-        printStmts(program, 1);
+        printTree({"Program", stmtTrees(program)});
     } catch (exception& e) {
         cerr << e.what() << "\n";
         return 1;
