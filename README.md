@@ -73,7 +73,8 @@ print a + b
 - `IDENT : ( letter | _ ) { letter | digit | _ }`; identifiers and keywords are
   case-sensitive.
 - Whitespace between tokens is insignificant, except that a newline separates statements
-  and ends an `IfShort` body.
+  and ends an `IfShort` body. Inside `( )`, `[ ]` and `{ }` a newline is ignored, so an
+  array, a tuple or an argument list may span several lines ([Q43](#q42q44--questions-raised-while-writing-the-parser)).
 - Errors come in two classes. A **syntax error** is reported by the parser and nothing
   executes: grammar violations, `exit` outside a loop, `return` outside a function, a
   call as an assignment target. A **runtime error** is raised when the offending statement
@@ -197,7 +198,7 @@ Statement
 ```
 
 **Decision** ([Q41](#11-spec-ambiguities-and-decisions)): a **call** may stand alone as a
-statement — `Call : Reference ( Expression { , Expression } )`, value discarded. It is
+statement — `Call : Reference ( [ Expression { , Expression } ] )`, value discarded. It is
 the only expression form that can; `a = 2` or `1 + 1` on a line of their own are syntax
 errors.
 
@@ -723,7 +724,7 @@ operators**.
 Reference
     : IDENT
     | Reference [ Expression ]                      // array element
-    | Reference ( Expression { , Expression } )     // call
+    | Reference ( [ Expression { , Expression } ] ) // call; f() has no arguments (Q42)
     | Reference . IDENT                             // tuple element
     | Reference . IntegerLiteral                    // tuple element
 ```
@@ -1018,7 +1019,7 @@ defined for functions is a **call**.
 
 ```
 FunctionLiteral
-    : func [ ( IDENT { , IDENT } ) ] FunBody
+    : func [ ( [ IDENT { , IDENT } ] ) ] FunBody     // func() = func (Q42)
 FunBody
     : is Body end
     | => Expression
@@ -1480,6 +1481,8 @@ INTEGER : digit { digit }
 REAL    : digit { digit } . digit { digit }
 STRING  : " { character } "  |  ' { character } '     // no escapes, one line
 COMMENT : // { character } end-of-line                 // ignored
+// Right after '.', a digit sequence is always an INTEGER (Q44): t.1.5 is t . 1 . 5
+// Inside ( ), [ ], { } a newline is ignored (Q43)
 
 Keywords: var if then else end while for in loop exit return print
           func is not and or xor true false none int real bool string
@@ -1490,7 +1493,7 @@ Statement
     : Declaration | Assignment | If | IfShort | Loop | Exit | Return | Print
     | Call                                              // added (Q41)
 Call
-    : Reference ( Expression { , Expression } )         // the call is the last accessor
+    : Reference ( [ Expression { , Expression } ] )     // the call is the last accessor; may be empty (Q42)
 
 Declaration
     : var VariableDefinition { , VariableDefinition }
@@ -1540,7 +1543,7 @@ TypeIndicator
     : int | real | bool | string | none | [ ] | { } | func
 
 FunctionLiteral
-    : func [ ( IDENT { , IDENT } ) ] FunBody
+    : func [ ( [ IDENT { , IDENT } ] ) ] FunBody     // func() = func (Q42)
 FunBody
     : is Body end
     | => Expression
@@ -1559,7 +1562,7 @@ TupleElement
 Reference
     : IDENT
     | Reference [ Expression ]                      // array element
-    | Reference ( Expression { , Expression } )     // call
+    | Reference ( [ Expression { , Expression } ] ) // call; f() has no arguments (Q42)
     | Reference . IDENT                             // tuple element
     | Reference . IntegerLiteral                    // tuple element
 ```
@@ -1635,3 +1638,11 @@ raised it.
 | Q39 | Range bounds                              | Is `v1..v2` inclusive at both ends?                                                                                                        | **Yes.** `for 1..3` iterates three times; `1..1` once.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Q40 | Calling a function literal directly       | `(func(x) => x + 1)(1)` — a call accessor applies to a `Reference`, and `( Expression )` is not one.                                       | **Not derivable; syntax error.** Accessors (`[ ]`, `( )`, `.`) hang only off a `Reference`, which is rooted in an `IDENT`. Bind the literal to a variable first. The same applies to `[1,2][1]` and `{a := 1}.a`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Q41 | A call as a statement                     | `Statement` lists no expression statement, yet a function whose body only prints is useless unless `f()` can stand alone.                | **A call is a statement.** `Statement` gains `Call : Reference ( Expression { , Expression } )`, whose value is discarded — the call must be the **last** accessor (`t.f()`, `a[1]()` are fine; `f().x` alone is not). No other expression is a statement: `a = 2` and `1 + 1` on their own are syntax errors. The parser reads a `Reference`; `:=` after it makes an assignment, a trailing call accessor makes a call statement, anything else is an error.                                                                                                                                                                                                                                                                             |
+
+### Q42–Q44 — questions raised while writing the parser
+
+| #   | Topic | Question | Decision |
+| --- | ----- | -------- | -------- |
+| Q42 | Calls and functions without arguments | `Reference ( Expression { , Expression } )` and `func [ ( IDENT { , IDENT } ) ]` require at least one argument / parameter inside the parentheses, so `f()` is not derivable — yet a function declared without parameters has to be called somehow. | **Empty parentheses are allowed** in both places: `Reference ( [ Expression { , Expression } ] )` and `func [ ( [ IDENT { , IDENT } ] ) ]`. `f()` calls a function with no arguments; `func()` is the same as `func`. |
+| Q43 | Newlines inside brackets | A newline separates statements, so an array, tuple or argument list written over several lines would break apart. | **Inside `( )`, `[ ]` and `{ }` a newline is ignored.** Everywhere else it still separates statements. Used by [tests/custom](tests/custom/Custom.md) `10-matrix-operations`, `12-tuple-records`. |
+| Q44 | A number after `.` | `t.1.a` is a tuple position followed by a name, but a lexer reading `1.` would start a real literal; `t.1.5` would become `t . 1.5`. | **Right after `.`, a digit sequence is always an `INTEGER`** — never the start of a real. `t.1.a` is `t . 1 . a`, and `t.1.5` is `t . 1 . 5` (position 5 of element 1). See `T-TUP-403`, `T-TUP-107`. |

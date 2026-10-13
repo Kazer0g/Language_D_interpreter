@@ -33,7 +33,7 @@ Two things the composed programs rely on, both noted in every file's header:
   `var a` from colliding with the next one's.
 
 **Every question the description left open is decided.** The decisions are numbered
-Q1–Q41 and collected in
+Q1–Q44 and collected in
 [Language D.md §11](../Language%20D.md#11-spec-ambiguities-and-decisions); each block's
 `9xx` section names the questions it raised and the tests that now verify the answer.
 There is no test in the suite whose expected value is still `?`.
@@ -284,6 +284,7 @@ find the tests that pin it down. Block-level `9xx` rows give the full ID lists.
 | Q38 loop variable assignable | [16](16-stmt-loops.md#1xx--for-loop-over-a-range) `T-LOOP-108`, `115` |
 | Q39 inclusive bounds | [16](16-stmt-loops.md#1xx--for-loop-over-a-range) `T-LOOP-101`, `105`, `113` |
 | Q41 call as a statement | [14](14-type-functions.md#0xx--function-literals-and-calls) `T-FUN-009`, `T-FUN-018`, `T-FUN-019`, [03](03-assignment.md#1xx--invalid-assignment-targets) `T-ASGN-107` |
+| Q44 number after `.` is an integer | [13](13-type-tuples.md) `T-TUP-107`, `T-TUP-403` |
 | Q40 no call on a literal | [14](14-type-functions.md#01x--functions-as-values) `T-FUN-016`, [18](18-expression-precedence.md#4xx--grammar-corrections) `T-PREC-413`, `414` |
 
 ---

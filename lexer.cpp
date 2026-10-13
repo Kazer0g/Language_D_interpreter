@@ -134,7 +134,7 @@ struct Lexer {
         return true;
     }
 
-    void add(TokenKind kind, string text) {
+    void add(TokenKind kind, string text) { // Для токенов которые не числа
         Token t;
         t.kind = kind;
         t.text = text;
@@ -198,7 +198,10 @@ struct Lexer {
         while (isdigit((unsigned char)peek())) text += advance();
         
         bool isReal = false;
-        if (peek() == '.') {
+        // После точки число — номер элемента кортежа (t.1.a, t.1.2), оно всегда целое:
+        // точку за ним не считаем дробной частью.
+        bool afterDot = !tokens.empty() && tokens.back().kind == T_DOT;
+        if (peek() == '.' && !afterDot) {
             if (isdigit((unsigned char)peekNext())) { 
                 isReal = true; 
                 text += advance();
@@ -290,39 +293,14 @@ struct Lexer {
     }
 };
 
-// === MAIN ===
-
-int main(int argc, char** argv) {
-    string source;
-
-    if (argc > 1) {
-        ifstream file(argv[1]);
-        if (!file) { cerr << "cannot open file: " << argv[1] << "\n"; return 1; }
-        stringstream buffer;
-        buffer << file.rdbuf();
-        source = buffer.str();
-    } else {
-        stringstream buffer;
-        buffer << cin.rdbuf();
-        source = buffer.str();
+// Печать токенов (для отладки и демо: main --tokens prog.d)
+void printTokens(vector<Token> tokens) {
+    for (Token t : tokens) {
+        cout << t.line << ":" << t.column << "\t" << tokenName(t.kind);
+        if      (t.kind == T_INT)    cout << "\t" << t.intValue;
+        else if (t.kind == T_REAL)   cout << "\t" << t.realValue;
+        else if (t.kind == T_IDENT)  cout << "\t" << t.text;
+        else if (t.kind == T_STRING) cout << "\t\"" << t.text << "\"";
+        cout << "\n";
     }
-
-    try {
-        Lexer lexer(source);
-        vector<Token> tokens = lexer.run();
-
-        for (Token t : tokens) {
-            cout << t.line << ":" << t.column << "\t" << tokenName(t.kind);
-            if      (t.kind == T_INT)    cout << "\t" << t.intValue;
-            else if (t.kind == T_REAL)   cout << "\t" << t.realValue;
-            else if (t.kind == T_IDENT)  cout << "\t" << t.text;
-            else if (t.kind == T_STRING) cout << "\t\"" << t.text << "\"";
-            cout << "\n";
-        }
-    } catch (exception& e) {
-        cerr << e.what() << "\n";
-        return 1;
-    }
-
-    return 0;
 }

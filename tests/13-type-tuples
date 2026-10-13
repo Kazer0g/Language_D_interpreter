@@ -269,7 +269,8 @@ print "== end of block 13 =="
 // var t := {a := 1}
 // print t.(1)
 
-// T-TUP-107  syntax error
+// T-TUP-107  runtime error: t.1.5 is t . 1 . 5 (Q44) — t.1 is the integer 1,
+//             and dot access on a non-tuple fails
 // var t := {a := 1}
 // print t.1.5
 
@@ -287,7 +288,8 @@ print "== end of block 13 =="
 // var a := 1
 // print a.b
 
-// T-TUP-112  syntax error: the separator is := not =
+// T-TUP-112  runtime error: a = 1 is a comparison, i.e. an unnamed element;
+//             a is undeclared
 // var t := {a = 1}
 
 // T-TUP-113  syntax error: a tuple element name must be an Identifier;

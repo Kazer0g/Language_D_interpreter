@@ -51,12 +51,12 @@ Access
 | T-TUP-104 | `var t := {a := 1}` <br> `print t.0` | runtime error — numbering starts with one |
 | T-TUP-105 | `var t := {a := 1}` <br> `var i := 1` <br> `print t.i` | runtime error — `Reference . IDENT` reads `i` as an **element name**, not a variable |
 | T-TUP-106 | `var t := {a := 1}` <br> `print t.(1)` | syntax error — the position must be an `IntegerLiteral`, not an expression |
-| T-TUP-107 | `var t := {a := 1}` <br> `print t.1.5` | syntax error — the position must be an integer literal |
+| T-TUP-107 | `var t := {a := 1}` <br> `print t.1.5` | runtime error — after `.` a number is always an integer position ([Q44](../Language%20D.md#q42q44--questions-raised-while-writing-the-parser)), so this is `t . 1 . 5`; `t.1` is the integer `1`, and dot access on a non-tuple fails (compare `T-TUP-403`, `t.1.a`) |
 | T-TUP-108 | `var t := {}` | syntax error — the grammar requires at least one `TupleElement`; `{ }` exists only as a type indicator ([Q33](../Language%20D.md#11-spec-ambiguities-and-decisions)) |
 | T-TUP-109 | `var t := {a := 1,}` | syntax error — trailing comma |
 | T-TUP-110 | `var t := {a := 1}` <br> `print t[1]` | runtime error — a tuple is accessed with `.`, not `[ ]` |
 | T-TUP-111 | `var a := 1` <br> `print a.b` | runtime error — dot access on a non-tuple |
-| T-TUP-112 | `var t := {a = 1}` | syntax error — the separator is `:=`, not `=` |
+| T-TUP-112 | `var t := {a = 1}` | runtime error — `TupleElement : [ Identifier := ] Expression`, and `a = 1` is a valid `Expression` (a comparison), so this is an **unnamed** element; `a` is undeclared |
 | T-TUP-113 | `var t := {1 := 5}` | syntax error — a tuple element **name** must be an `Identifier`, and `1` tokenizes as an `IntegerLiteral`, never an identifier ([Q22](../Language%20D.md#11-spec-ambiguities-and-decisions)); contrast with `T-TUP-004`, where `1` is a valid **unnamed** element |
 
 ## 2xx — Immutability and extension
