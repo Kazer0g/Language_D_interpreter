@@ -87,6 +87,9 @@ enum StmtKind {
     S_CALL       // f(x) отдельной строкой    value (узел E_CALL)
 };
 
+// ! По-хорошему сделать для каждого стрейтмента 
+// ! унаследованный класс что бы читалось нормально
+
 struct Stmt {
     StmtKind kind;
     int line = 0, column = 0;
@@ -757,7 +760,7 @@ TreeNode stmtTree(Stmt* s) {
             TreeNode n = {"Declaration"};
             for (size_t i = 0; i < s->names.size(); i++) {
                 if (s->values[i]) n.kids.push_back({s->names[i] + " :=", {exprTree(s->values[i])}});
-                else              n.kids.push_back({s->names[i] + " (none)"});
+                else              n.kids.push_back({s->names[fi] + " (none)"});
             }
             return n;
         }
