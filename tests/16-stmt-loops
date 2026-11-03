@@ -298,20 +298,20 @@ print "== end of block 16 =="
 // var n
 // for v in n loop print v end
 
-// T-LOOP-405  syntax error: exit outside a loop, rejected by the parser (Q24)
+// T-LOOP-405  semantic error: exit outside a loop, rejected by Analyzer (Q24)
 // exit
 
-// T-LOOP-406  syntax error: exit outside a loop
+// T-LOOP-406  semantic error: exit outside a loop
 // if true then exit end
 
-// T-LOOP-407  syntax error: a function body is not a loop
+// T-LOOP-407  semantic error: a function body is not a loop
 // var f := func is exit end
 // f()
 
-// T-LOOP-411  syntax error: the function body starts a fresh context
+// T-LOOP-411  semantic error: the function body starts a fresh context
 // loop var f := func is exit end; exit end
 
-// T-LOOP-412  syntax error and NO output: the check happens before execution
+// T-LOOP-412  semantic error and NO output: the check happens before execution
 // print 1
 // exit
 

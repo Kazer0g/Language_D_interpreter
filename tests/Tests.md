@@ -98,9 +98,10 @@ Each binary operator block contains the same three sections in the same order:
 - A negative test states `runtime error` — the language is dynamic, so operand type
   control happens **during execution**, not at compile time
   ([spec §8](../Language%20D.md#8-operator-semantics)). A test that must be rejected
-  before execution states `syntax error` instead. Which errors are which is fixed by
-  [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions): grammar violations and the
-  three placement rules (`exit`, `return`, call as assignment target) are syntax errors;
+  before execution states `syntax error` or `semantic error` instead. Which errors are
+  which is fixed by [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions): grammar
+  violations are syntax errors; the three placement rules (`exit`, `return`, call as
+  assignment target) are semantic errors detected by Analyzer;
   everything else is a runtime error.
 - A runtime error aborts the program; output produced before it stays and is part of
   the expected result where a test says so.
@@ -267,7 +268,7 @@ find the tests that pin it down. Block-level `9xx` rows give the full ID lists.
 | Q21 no input | every program in the suite |
 | Q22 identifiers | [01](01-lexical-and-literals.md#4xx--identifiers) `T-LEX-4xx` — the base rule; extended to every other place `IDENT` is declared: [02](02-declarations-and-scope.md#9xx--decided) `T-DECL-108` (syntax error wins even over an undeclared name), [13](13-type-tuples.md#1xx--invalid-literals-and-access) `T-TUP-113` (no digit-named tuple element), [14](14-type-functions.md#1xx--invalid-literals-and-calls) `T-FUN-104` (no digit-named parameter), [16](16-stmt-loops.md#1xx--for-loop-over-a-range) `T-LOOP-117` (no digit-named loop variable) |
 | Q23 string content | [01](01-lexical-and-literals.md#9xx--decided) `T-LEX-903`–`905` |
-| Q24 syntax vs runtime error | [02](02-declarations-and-scope.md#1xx--invalid-declarations) `T-DECL-101`, [03](03-assignment.md#1xx--invalid-assignment-targets) `T-ASGN-108`, [13](13-type-tuples.md#1xx--invalid-literals-and-access) `T-TUP-101`, [14](14-type-functions.md#1xx--invalid-literals-and-calls) `T-FUN-105`, [16](16-stmt-loops.md#4xx--exit) `T-LOOP-405`–`407`, `411`, `412` |
+| Q24 syntax, semantic, and runtime errors | [02](02-declarations-and-scope.md#1xx--invalid-declarations) `T-DECL-101`, [03](03-assignment.md#1xx--invalid-assignment-targets) `T-ASGN-108`, [13](13-type-tuples.md#1xx--invalid-literals-and-access) `T-TUP-101`, [14](14-type-functions.md#1xx--invalid-literals-and-calls) `T-FUN-105`, [16](16-stmt-loops.md#4xx--exit) `T-LOOP-405`–`407`, `411`, `412` |
 | Q25 initialiser scope | [02](02-declarations-and-scope.md#2xx--scope-shadowing-dynamic-type) `T-DECL-210`, `904`, [14](14-type-functions.md#2xx--scope-inside-a-function-closures) `T-FUN-213` |
 | Q26 aliasing | [03](03-assignment.md#2xx--semantics) `T-ASGN-203`, `208`–`210`, [02](02-declarations-and-scope.md#2xx--scope-shadowing-dynamic-type) `T-DECL-211`, [12](12-type-arrays.md#4xx--edge-cases) `T-ARR-403`, [13](13-type-tuples.md#4xx--edge-cases) `T-TUP-408` |
 | Q27 64-bit integers | [04](04-op-addition.md#9xx--decided) `T-ADD-903`, [05](05-op-subtraction.md#9xx--decided) `T-SUB-901`, [06](06-op-multiplication.md#9xx--decided) `T-MUL-901`, `903`, [07](07-op-division.md#9xx--decided) `T-DIV-903`, [19](19-implicit-conversions.md#9xx--decided) `T-CONV-904` |

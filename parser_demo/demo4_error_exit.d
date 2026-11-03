@@ -1,4 +1,4 @@
-// Parser demo 4 — exit outside of a loop is a syntax error
+// Demo 4 — parsed successfully, then rejected by Analyzer: exit outside a loop
 var x := 1
 if x > 0 then
     exit

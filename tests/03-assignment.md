@@ -46,7 +46,7 @@ references from other operands (constants, subexpressions, etc.).
 | T-ASGN-105 | `b := 1` *(no declaration of `b`)* | runtime error — assignment does not declare |
 | T-ASGN-106 | `var a := 1` <br> `a := ` | syntax error — `:=` requires an expression |
 | T-ASGN-107 | `var a := 1` <br> `a = 2` | syntax error — `=` is comparison, not assignment, and a bare expression is not a `Statement`; only a call may stand alone ([Q41](../Language%20D.md#11-spec-ambiguities-and-decisions)) |
-| T-ASGN-108 | `var f := func => 1` <br> `f() := 1` | syntax error — a call cannot be the last accessor of a target ([Q24](../Language%20D.md#11-spec-ambiguities-and-decisions)) |
+| T-ASGN-108 | `var f := func => 1` <br> `f() := 1` | semantic error — a call cannot be the last accessor of a target ([Q24](../Language%20D.md#11-spec-ambiguities-and-decisions)) |
 | T-ASGN-109 | `var t := {a := 1}` <br> `t.b := 5` | runtime error — the tuple has no element `b`; adding one would change its structure ([Q11](../Language%20D.md#11-spec-ambiguities-and-decisions)) |
 
 ## 2xx — Semantics
@@ -70,4 +70,4 @@ references from other operands (constants, subexpressions, etc.).
 |---|---|---|---|
 | T-ASGN-901 | [Q26](../Language%20D.md#11-spec-ambiguities-and-decisions) — value vs reference semantics for arrays, tuples and functions on assignment. | Arrays and tuples alias; simple values and functions are immutable so it never shows. `+` builds a new object. | `T-ASGN-203`, `T-ASGN-208`–`T-ASGN-210` |
 | T-ASGN-902 | [Q11](../Language%20D.md#11-spec-ambiguities-and-decisions) — `t.a := v` on a tuple. | Allowed for an existing element; a new name is a runtime error. | `T-ASGN-004`, `T-ASGN-008`, `T-ASGN-009`, `T-ASGN-109` |
-| T-ASGN-903 | [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions) — is `f() := 1` a syntax error, given the grammar permits it? | Yes: the parser rejects a target whose last accessor is a call. | `T-ASGN-108` |
+| T-ASGN-903 | [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions) — is `f() := 1` rejected before execution, given the grammar permits it? | Yes: Analyzer reports a semantic error for a target whose last accessor is a call. | `T-ASGN-108` |
