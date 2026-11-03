@@ -104,11 +104,11 @@ A single header expression must be an array or a tuple.
 | T-LOOP-402 | `while true loop exit end` <br> `print "done"` | `done` — `exit` leaves a while loop |
 | T-LOOP-403 | `for i in 1..10 loop if i = 3 => exit end` <br> `print "done"` | `done` — `exit` leaves a for loop |
 | T-LOOP-404 | `for i in 1..3 loop print i; exit end` | `1` — `exit` on the first iteration |
-| T-LOOP-405 | `exit` | syntax error — `exit` outside a loop, rejected by the parser ([Q24](../Language%20D.md#11-spec-ambiguities-and-decisions)) |
-| T-LOOP-406 | `if true then exit end` | syntax error — `exit` outside a loop |
-| T-LOOP-407 | `var f := func is exit end` <br> `f()` | syntax error — a function body is not a loop |
-| T-LOOP-411 | `loop var f := func is exit end; exit end` | syntax error — the function body starts a fresh context even inside a loop |
-| T-LOOP-412 | `print 1` <br> `exit` | syntax error, **no output** — the check happens before execution |
+| T-LOOP-405 | `exit` | semantic error — `exit` outside a loop, rejected by Analyzer ([Q24](../Language%20D.md#11-spec-ambiguities-and-decisions)) |
+| T-LOOP-406 | `if true then exit end` | semantic error — `exit` outside a loop |
+| T-LOOP-407 | `var f := func is exit end` <br> `f()` | semantic error — a function body is not a loop |
+| T-LOOP-411 | `loop var f := func is exit end; exit end` | semantic error — the function body starts a fresh context even inside a loop |
+| T-LOOP-412 | `print 1` <br> `exit` | semantic error, **no output** — the check happens before execution |
 | T-LOOP-408 | `loop loop exit end print "inner done"; exit end` <br> `print "done"` | `inner done` `done` — `exit` leaves the **innermost** loop |
 | T-LOOP-409 | `for i in 1..3 loop var f := func => 1; exit end` <br> `print "done"` | `done` — `exit` inside a loop that also declares a function |
 | T-LOOP-410 | `loop print "a"; exit; print "b" end` | `a` — statements after `exit` do not run |
@@ -132,7 +132,7 @@ A single header expression must be an array or a tuple.
 | T-LOOP-902 | [Q37](../Language%20D.md#11-spec-ambiguities-and-decisions) — a descending range: empty loop, or does it count down? | Zero iterations. | `T-LOOP-106` |
 | T-LOOP-903 | [Q38](../Language%20D.md#11-spec-ambiguities-and-decisions) — assigning to the loop variable inside the body. | Allowed; overwritten on the next iteration. | `T-LOOP-108`, `T-LOOP-115` |
 | T-LOOP-904 | [Q13](../Language%20D.md#11-spec-ambiguities-and-decisions) — element names when iterating a tuple. | Values only. | `T-LOOP-211`, [T-TUP-306](13-type-tuples.md#3xx--tuples-in-other-constructs) |
-| T-LOOP-905 | [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions) — is `exit` outside a loop a syntax error or a runtime error? | Syntax error, before execution. | `T-LOOP-405`–`T-LOOP-407`, `T-LOOP-411`, `T-LOOP-412` |
+| T-LOOP-905 | [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions) — is `exit` outside a loop a semantic error or a runtime error? | Semantic error, before execution. | `T-LOOP-405`–`T-LOOP-407`, `T-LOOP-411`, `T-LOOP-412` |
 | T-LOOP-906 | [Q39](../Language%20D.md#11-spec-ambiguities-and-decisions) — are the range bounds inclusive on both ends? | Yes. | `T-LOOP-101`, `T-LOOP-105`, `T-LOOP-113` |
 | T-LOOP-907 | [Q32](../Language%20D.md#11-spec-ambiguities-and-decisions) — iteration order over sparse keys, and writes during iteration. | Ascending key order; the keys to visit are fixed at loop entry. | `T-LOOP-210`, `T-LOOP-212`, `T-LOOP-213` |
 | T-LOOP-908 | [Q22](../Language%20D.md#11-spec-ambiguities-and-decisions) — can the `for` loop variable start with a digit? | No — `ForHeader : for [ IDENT in ] …` uses the same `IDENT` as every other declared name; `1i` is two tokens, not one. Syntax error. | `T-LOOP-117` |

@@ -10,6 +10,68 @@ numbered and collected in [§11](#11-spec-ambiguities-and-decisions).
 
 Test suite index: [tests/Tests.md](tests/Tests.md)
 
+## Current implementation: semantic analysis
+
+The current pipeline is `Lexer -> Parser -> AST -> Analyzer -> optimized AST`.
+Execution is not implemented yet; the CLI prints the resulting tree.
+
+Build with C++17:
+
+```text
+g++ -std=c++17 -Wall -Wextra -o main main.cpp
+```
+
+Or from an MSVC Developer Command Prompt:
+
+```text
+cl /nologo /std:c++17 /EHsc /utf-8 /W4 /MT main.cpp /Fe:main.exe
+```
+
+```text
+main program.d                 # validate, optimize, print AST
+main --no-optimize program.d   # validate, print unchanged AST
+main --before-after program.d  # print AST before/after optimization and counters
+main --tokens program.d        # lexer output only
+```
+
+[analyzer.cpp](analyzer.cpp) makes two passes. The first does not modify the AST:
+
+1. **Keyword context:** `exit` needs an enclosing loop in the current function;
+   `return` needs an enclosing function. A nested function starts a fresh loop context.
+2. **Assignment targets:** the final accessor must be a variable, array element,
+   or tuple element. `f() := 1` fails; `f()[1] := 1` is structurally valid.
+
+After all checks succeed, the second pass modifies the AST:
+
+1. **Constant folding:** bottom-up evaluation of unary/binary expressions with scalar
+   literal operands: integer/real arithmetic and comparisons, boolean logic and
+   equality, string concatenation and equality. Integer comparisons retain 64-bit
+   precision; integer division rounds toward negative infinity. Overflow, non-finite
+   real results, division by zero, and invalid operand combinations are left in the AST
+   for runtime errors. Calls, names, arrays, tuples, and `is` nodes are not folded.
+2. **Unreachable-code removal:** statements after a direct `return` or `exit` in the
+   same body are deleted. A conditional return does not remove code after its `if`;
+   code after a loop with `exit` stays. Block scopes are preserved.
+
+All branches and even unreachable tails are checked before optimization. Types,
+undeclared names, duplicate declarations, and function arity remain runtime concerns
+as specified in Q24. The three former parser placement checks now report
+`Semantic error at line:column`; grammar violations still report `Syntax error`.
+
+Lab examples: [analyzer_demo/](analyzer_demo/). Start with
+`main --before-after analyzer_demo/constants.d` and
+`main --before-after analyzer_demo/unreachable.d`; `error_*.d` demonstrate diagnostics.
+
+Regression tests: [tests/analyzer_tests.cpp](tests/analyzer_tests.cpp), a separate
+entry point. Build and run with:
+
+```text
+g++ -std=c++17 -Wall -Wextra -o analyzer_tests tests/analyzer_tests.cpp
+./analyzer_tests
+```
+
+For MSVC, use the same options as above with `tests\analyzer_tests.cpp /Fe:analyzer_tests.exe`.
+
 ---
 
 ## Table of Contents
@@ -75,9 +137,10 @@ print a + b
 - Whitespace between tokens is insignificant, except that a newline separates statements
   and ends an `IfShort` body. Inside `( )`, `[ ]` and `{ }` a newline is ignored, so an
   array, a tuple or an argument list may span several lines ([Q43](#q42q44--questions-raised-while-writing-the-parser)).
-- Errors come in two classes. A **syntax error** is reported by the parser and nothing
-  executes: grammar violations, `exit` outside a loop, `return` outside a function, a
-  call as an assignment target. A **runtime error** is raised when the offending statement
+- Errors come in three classes. A **syntax error** is reported by the parser for
+  grammar violations. A **semantic error** is reported by Analyzer for `exit` outside
+  a loop, `return` outside a function, or a call as an assignment target. Both stop
+  the program before execution. A **runtime error** is raised when the offending statement
   executes and aborts the program; output already produced stays.
 
 **Tests** → [01-lexical-and-literals.md](tests/01-lexical-and-literals.md) (`T-LEX-3xx` separators)
@@ -243,7 +306,7 @@ a := f(3)                   // value produced by a call
 - A tuple element is a valid target: `t.a := 5` and `t.1 := 5` replace the value of an
   **existing** element. A name that is not in the tuple would change its structure and
   is a runtime error.
-- A call cannot be the last accessor of a target: `f() := 1` is a **syntax error**, even
+- A call cannot be the last accessor of a target: `f() := 1` is a **semantic error**, even
   though `Reference` derives it.
 - Assigning an array or tuple **aliases** it (see [§3.1](#31-variable-declaration)).
   Assigning to an array key that does not exist creates it.
@@ -432,8 +495,8 @@ print i                     // 10
 **Decision** ([Q24](#11-spec-ambiguities-and-decisions)): `exit` leaves the
 **innermost** enclosing loop. An `exit` that is not inside a loop body — at program
 level, in a branch outside any loop, or in a function body (a function body starts a
-fresh context even when the literal sits inside a loop) — is a **syntax error**,
-detected by the parser.
+fresh context even when the literal sits inside a loop) — is a **semantic error**,
+detected by Analyzer before execution.
 
 **Tests** → [16-stmt-loops.md](tests/16-stmt-loops.md) (`T-LOOP-4xx`)
 
@@ -466,7 +529,7 @@ end
 **Decision** ([Q14](#11-spec-ambiguities-and-decisions), [Q18](#11-spec-ambiguities-and-decisions),
 [Q24](#11-spec-ambiguities-and-decisions)): `return` without an expression, and running
 off the end of an `is … end` body, both produce **`none`** as the call's value. A
-`return` that is not inside a function body is a **syntax error**, exactly like `exit`
+`return` that is not inside a function body is a **semantic error**, exactly like `exit`
 outside a loop.
 
 **Tests** → [14-type-functions.md](tests/14-type-functions.md) (`T-FUN-3xx`)
@@ -749,7 +812,7 @@ print m[2].a                // chained accessors
 **Decision** ([Q24](#11-spec-ambiguities-and-decisions), [Q40](#11-spec-ambiguities-and-decisions),
 [Q41](#11-spec-ambiguities-and-decisions)): a `Reference` is always rooted in an
 identifier — accessors never attach to a literal or a parenthesised expression. As an
-assignment target it must **not** end in a call (`f() := 1` is a syntax error); as a
+assignment target it must **not** end in a call (`f() := 1` is a semantic error); as a
 statement on its own it **must** end in a call (`f()` and `t.f()` are statements,
 `f().x` is not).
 
@@ -1602,7 +1665,7 @@ where it is silent choose the reading that is simplest to implement and to expla
 | Q11 | Tuple element assignment                   | Tuple structure "cannot be modified" — is `t.a := 5` (changing a value, not the structure) allowed?                                                                                                                                                            | **Allowed.** `t.a := v` and `t.1 := v` replace the value of an existing element. `t.b := v` for a name that does not exist would change the structure and is a runtime error.                                                                                                                                                                                                                                                                                                                                       |
 | Q12 | `for` over a range with real bounds        | Header says `v1`, `v2` are "current **integer** values" — behaviour for real expressions is unspecified.                                                                                                                                                       | **Runtime error.** Both bounds must evaluate to integers; there is no narrowing.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Q13 | Loop variable over a tuple                 | Iterating a tuple yields element values — are names accessible?                                                                                                                                                                                                | **Values only,** in positional order. Names are not reachable from the loop variable.                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Q14 | `return` outside a function                | Not specified (`exit` outside a loop is explicitly forbidden; `return` is not).                                                                                                                                                                                | **Forbidden, like `exit`.** Both are checked by the parser before execution ([Q24](#q22q41--questions-raised-while-writing-the-tests)).                                                                                                                                                                                                                                                                                                                                                                             |
+| Q14 | `return` outside a function                | Not specified (`exit` outside a loop is explicitly forbidden; `return` is not).                                                                                                                                                                                | **Forbidden, like `exit`.** Both are checked by Analyzer before execution ([Q24](#q22q41--questions-raised-while-writing-the-tests)).                                                                                                                                                                                                                                                                                                                                                                             |
 | Q15 | `print` output format                      | Separator between values, and rendering of `real`, `array`, `tuple`, `func` and `none` values are not specified.                                                                                                                                              | Fixed in [§4.8](#48-print): values separated by **one space**, one **newline** after each `print`; integers as decimal digits; reals with the **shortest round-trip** digit string and **always a `.`** (`3.0`, `0.5`, `0.3333333333333333`); strings without quotes; `true`/`false`; arrays `[1, 2, 3]` (`[]` when empty, gaps not shown); tuples `{a := 1, 2}`; functions as `func`; `none` as `none`. The rule is the same at every nesting depth.                                                             |
 | Q16 | Comments                                   | The examples use `//` line comments but the lexical rules never define them.                                                                                                                                                                                   | **`//` to end of line is a comment.** There is no block comment form; `/*` is a syntax error.                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Q17 | Function call arity mismatch               | Calling with fewer/more arguments than parameters is not specified.                                                                                                                                                                                            | **Runtime error.** The argument count must equal the parameter count.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -1620,7 +1683,7 @@ raised it.
 | --- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Q22 | Identifier syntax                         | `IDENT` is never defined; underscores and case sensitivity are unspecified.                                                                | `IDENT : ( letter \| _ ) { letter \| digit \| _ }` — **an identifier can never start with a digit.** **Case-sensitive**, for identifiers and keywords alike (`True` is an identifier, `A` and `a` are different variables). Keywords cannot be identifiers. This same `IDENT` is what the grammar calls `Identifier` in `TupleElement` ([§7.6](#76-tuple)), what names a function parameter ([§7.7](#77-function)), and what names the `for` loop variable ([§4.5](#45-loop)) — one rule, applied everywhere a name is declared. Consequence: `var 1a := 1`, `{1 := 5}`, `func(1) => 1` and `for 1i in 1..3 loop … end` are all syntax errors for the identical reason — `1` (or `1i`) lexes as `INTEGER` (then `IDENT`), never as a single `IDENT` — so, in particular, a tuple element can never be **named** `1`, only accessed **at position** `1` (`t.1`, a different production, `IntegerLiteral`).                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Q23 | String literal content                    | "Arbitrary characters" — are there escape sequences, and may a string span lines?                                                          | **No escape sequences**; a backslash is an ordinary character. A string literal **ends on the line it starts** — a newline before the closing quote is a syntax error. The closing quote cannot appear inside the string; use the other quote style (`"it's"`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Q24 | Syntax error vs runtime error             | Which violations are detected before execution?                                                                                            | **Syntax errors** (reported by the parser, nothing executes): every grammar violation, plus three placement rules the parser can check — `exit` outside a loop body, `return` outside a function body, and a call `f(…)` as the last accessor of an assignment target. **Everything else is a runtime error** raised when the offending statement executes: type errors, undeclared names, redeclaration in the same scope, duplicate names in one declaration, in a tuple literal or in a parameter list, arity mismatch, missing tuple elements. A runtime error aborts the program; output produced before it stays produced. |
+| Q24 | Syntax, semantic, and runtime errors | Which violations are detected before execution? | **Syntax errors**: grammar violations, reported by Parser. **Semantic errors**: `exit` outside a loop body, `return` outside a function body, or a call as the final assignment-target accessor, reported by Analyzer before optimization. Both stop execution before any output. **Runtime errors**: type errors, undeclared names, redeclaration, duplicate names in declarations/tuples/parameter lists, arity mismatch, missing tuple elements. Runtime errors abort execution; output already produced stays. |
 | Q25 | Initialiser scope                         | In `var x := x + 1` inside a nested scope, does the initialiser see the outer `x` or the one being declared?                               | **The outer one.** The initialiser is evaluated first, in the scope as it is before the declaration; the new name is introduced afterwards. `var x := 1; if true then var x := x + 1; print x end` prints `2`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Q26 | Value vs reference semantics              | Does `var b := a` copy an array or tuple, or alias it?                                                                                     | **Arrays and tuples alias.** Assignment, declaration and argument passing bind the same object; `b[1] := 9` is visible through `a`. Simple values (integer, real, string, boolean, `none`) and functions are immutable, so the distinction never shows for them. `+` always builds a **new** array or tuple.                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Q27 | Integer range                             | Integer size and overflow behaviour are not specified.                                                                                     | **64-bit signed** (`-2^63 .. 2^63-1`). An arithmetic result outside that range is a **runtime error**; nothing wraps silently. Widening a large integer to real rounds to the nearest double and is not an error.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |

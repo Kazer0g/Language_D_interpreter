@@ -107,6 +107,42 @@ struct Stmt {
     vector<Stmt*> body;                 // S_WHILE, S_FOR, S_LOOP
 };
 
+// Дерево владеет дочерними узлами. Эти функции нужны и при удалении поддеревьев
+// оптимизатором, и для освобождения всей программы после печати.
+void destroyStmt(Stmt* s);
+
+void destroyExpr(Expr* e) {
+    if (!e) return;
+    destroyExpr(e->operand);
+    destroyExpr(e->left);
+    destroyExpr(e->right);
+    destroyExpr(e->target);
+    destroyExpr(e->index);
+    for (Expr* item : e->items) destroyExpr(item);
+    destroyExpr(e->bodyExpr);
+    for (Stmt* s : e->body) destroyStmt(s);
+    delete e;
+}
+
+void destroyStmt(Stmt* s) {
+    if (!s) return;
+    destroyExpr(s->target);
+    destroyExpr(s->value);
+    destroyExpr(s->cond);
+    destroyExpr(s->from);
+    destroyExpr(s->to);
+    for (Expr* value : s->values) destroyExpr(value);
+    for (Stmt* child : s->thenBody) destroyStmt(child);
+    for (Stmt* child : s->elseBody) destroyStmt(child);
+    for (Stmt* child : s->body) destroyStmt(child);
+    delete s;
+}
+
+void destroyProgram(vector<Stmt*>& program) {
+    for (Stmt* s : program) destroyStmt(s);
+    program.clear();
+}
+
 // ============================================================================
 // === ПАРСЕР ===
 // ============================================================================
@@ -114,10 +150,6 @@ struct Stmt {
 struct Parser {
     vector<Token> tokens;
     size_t pos = 0;
-
-    // Для проверок из Q24: exit только внутри цикла, return только внутри функции.
-    int loopDepth = 0;
-    int funcDepth = 0;
 
     Parser(vector<Token> t) : tokens(t) {}
 
@@ -283,9 +315,7 @@ struct Parser {
         Expr* ref = parseReference();
 
         if (check(T_ASSIGN)) {
-            Token assign = advance();
-            if (ref->kind == E_CALL)
-                failAt(assign, "cannot assign to a function call");     // f() := 1 (Q24)
+            advance();
             Stmt* s = newStmt(S_ASSIGN, start);
             s->target = ref;
             s->value = parseExpression();
@@ -359,24 +389,20 @@ struct Parser {
     // LoopBody : loop Body end
     vector<Stmt*> parseLoopBody() {
         expect(T_LOOP, "'loop'");
-        loopDepth++;
         vector<Stmt*> body = parseBody("loop body");
-        loopDepth--;
         expect(T_END, "'end' to close the loop");
         return body;
     }
 
-    // Exit : exit    — только внутри цикла (Q24).
+    // Exit : exit    — контекст проверит Analyzer.
     Stmt* parseExit() {
         Token t = expect(T_EXIT, "'exit'");
-        if (loopDepth == 0) failAt(t, "'exit' outside of a loop");
         return newStmt(S_EXIT, t);
     }
 
-    // Return : return [ Expression ]    — только внутри функции (Q14, Q24).
+    // Return : return [ Expression ]    — контекст проверит Analyzer.
     Stmt* parseReturn() {
         Token t = expect(T_RETURN, "'return'");
-        if (funcDepth == 0) failAt(t, "'return' outside of a function");
         Stmt* s = newStmt(S_RETURN, t);
         // Выражения нет, если сразу за return кончается оператор.
         if (!check(T_NEWLINE) && !check(T_SEMICOLON) && !check(T_END) &&
@@ -595,12 +621,6 @@ struct Parser {
             expect(T_RPAREN, "',' or ')' after parameters");
         }
 
-        // Тело функции — новый контекст: exit из внешнего цикла здесь нельзя,
-        // а return — можно.
-        int savedLoopDepth = loopDepth;
-        loopDepth = 0;
-        funcDepth++;
-
         if (match(T_ARROW)) {
             e->bodyExpr = parseExpression();
         } else if (match(T_IS)) {
@@ -610,8 +630,6 @@ struct Parser {
             fail("expected 'is' or '=>' in the function literal, got " + describe(peek()));
         }
 
-        funcDepth--;
-        loopDepth = savedLoopDepth;
         return e;
     }
 

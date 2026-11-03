@@ -189,7 +189,7 @@ print "== end of block 03 =="
 // var a := 1
 // a = 2
 
-// T-ASGN-108  syntax error: a call cannot be the last accessor of a target (Q24)
+// T-ASGN-108  semantic error: a call cannot be the last accessor of a target (Q24)
 // var f := func => 1
 // f() := 1
 

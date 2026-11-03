@@ -67,7 +67,7 @@ VariableDefinition
 | ID | Question | Decision | Verified by |
 |---|---|---|---|
 | T-DECL-901 | [Q1](../Language%20D.md#11-spec-ambiguities-and-decisions) — the description calls the default value both `none` and "empty". | One value, `none`. | `T-DECL-002` |
-| T-DECL-902 | [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions) — is redeclaration a syntax error or a runtime error? | Runtime error, raised when the second declaration executes. The parser checks grammar and placement only. | `T-DECL-101`, `T-DECL-102` |
+| T-DECL-902 | [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions) — is redeclaration a syntax error or a runtime error? | Runtime error, raised when the second declaration executes. Parser checks grammar; Analyzer checks keyword context and assignment targets. | `T-DECL-101`, `T-DECL-102` |
 | T-DECL-903 | [Q25](../Language%20D.md#11-spec-ambiguities-and-decisions) — scope of a variable inside its own initialiser. | The initialiser sees the enclosing scope; the name is introduced afterwards. | `T-DECL-210` |
 | T-DECL-904 | [Q25](../Language%20D.md#11-spec-ambiguities-and-decisions) — a self-referencing initialiser with no outer name. | `var y := y` is a runtime error: `y` is undeclared while its initialiser runs. | `var y := y` → runtime error |
 | T-DECL-905 | [Q22](../Language%20D.md#11-spec-ambiguities-and-decisions) — a declared name that starts with a digit. | Syntax error, caught by the lexer before the statement runs at all — so it wins even over an initialiser that would independently fail (an undeclared `b`). | `T-DECL-108` |

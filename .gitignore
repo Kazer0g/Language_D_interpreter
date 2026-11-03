@@ -2,3 +2,6 @@ lexer.exe
 lexer.obj
 main.exe
 main.obj
+analyzer_tests
+analyzer_tests.exe
+analyzer_tests.obj

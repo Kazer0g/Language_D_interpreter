@@ -402,11 +402,11 @@ print "== end of block 14 =="
 // var f := func => y
 // print f()
 
-// T-FUN-307  syntax error: return at program level (Q14, Q24)
+// T-FUN-307  semantic error: return at program level (Q14, Q24)
 // return 1
 
-// T-FUN-308  syntax error: return outside a function body
+// T-FUN-308  semantic error: return outside a function body
 // if true then return 1 end
 
-// T-FUN-311  syntax error: a loop body is not a function body
+// T-FUN-311  semantic error: a loop body is not a function body
 // loop return 1 end

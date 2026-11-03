@@ -106,11 +106,11 @@ own declarations live in a fresh scope per call.
 | T-FUN-304 | `var f := func(a, b) is if a > b then return a end return b end` <br> `print f(3, 7)` | `7` — early return from a branch |
 | T-FUN-305 | `var f := func is print "a" end` <br> `print f() is none` | `a` then `true` — falling off the end yields `none` |
 | T-FUN-306 | `var f := func is var i := 0` <br> `  loop i := i + 1; if i = 3 => return i end` <br> `end` <br> `print f()` | `3` — `return` leaves the function from inside a loop |
-| T-FUN-307 | `return 1` | syntax error — `return` at program level ([Q14](../Language%20D.md#11-spec-ambiguities-and-decisions), [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions)) |
-| T-FUN-308 | `if true then return 1 end` | syntax error — `return` outside a function body |
+| T-FUN-307 | `return 1` | semantic error — `return` at program level ([Q14](../Language%20D.md#11-spec-ambiguities-and-decisions), [Q24](../Language%20D.md#11-spec-ambiguities-and-decisions)) |
+| T-FUN-308 | `if true then return 1 end` | semantic error — `return` outside a function body |
 | T-FUN-309 | `var f := func => 1 + 2` <br> `print f()` | `3` — `=>` returns the expression value implicitly |
 | T-FUN-310 | `var f := func is print "x" end` <br> `print f()` | `x` then `none` — the `none` result is printable |
-| T-FUN-311 | `loop return 1 end` | syntax error — a loop body is not a function body |
+| T-FUN-311 | `loop return 1 end` | semantic error — a loop body is not a function body |
 
 ## 4xx — Edge cases
 
@@ -129,6 +129,6 @@ own declarations live in a fresh scope per call.
 | T-FUN-901 | [Q17](../Language%20D.md#11-spec-ambiguities-and-decisions) — arity mismatch on a call. | Runtime error; the counts must be equal. | `T-FUN-110`, `T-FUN-111`, `T-FUN-113` |
 | T-FUN-902 | [Q18](../Language%20D.md#11-spec-ambiguities-and-decisions) — result of `return` without a value and of falling off the end. | `none` in both cases. | `T-FUN-302`, `T-FUN-305`, `T-FUN-310` |
 | T-FUN-903 | [Q19](../Language%20D.md#11-spec-ambiguities-and-decisions) — closures and recursion. | Lexical closures by reference; names resolved at call time; recursion follows. | `T-FUN-204`–`T-FUN-215` |
-| T-FUN-904 | [Q14](../Language%20D.md#11-spec-ambiguities-and-decisions) — `return` outside a function. | Syntax error, like `exit` outside a loop. | `T-FUN-307`, `T-FUN-308`, `T-FUN-311` |
+| T-FUN-904 | [Q14](../Language%20D.md#11-spec-ambiguities-and-decisions) — `return` outside a function. | Semantic error, like `exit` outside a loop. | `T-FUN-307`, `T-FUN-308`, `T-FUN-311` |
 | T-FUN-905 | [Q40](../Language%20D.md#11-spec-ambiguities-and-decisions) — can a function literal be called directly? | No — syntax error; bind it first. | `T-FUN-016` |
 | T-FUN-906 | [Q41](../Language%20D.md#11-spec-ambiguities-and-decisions) — is a call a statement, given `Statement` lists none? | Yes, a call and only a call; its value is discarded. | `T-FUN-009`, `T-FUN-018`–`T-FUN-020`, [T-ASGN-107](03-assignment.md#1xx--invalid-assignment-targets) |
