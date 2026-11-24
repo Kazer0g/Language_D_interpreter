@@ -25,9 +25,9 @@ g++ -std=c++17 -Wall -Wextra -o main main.cpp
 Примеры лежат в [parser/](parser/).
 
 ```sh
-./main --no-optimize demos/parser/demo1_precedence.d
-./main --no-optimize demos/parser/demo4_error_exit.d
-./main --no-optimize demos/parser/demo5_error_assign_call.d
+./main --ast --no-optimize demos/parser/demo1_precedence.d
+./main --ast --no-optimize demos/parser/demo4_error_exit.d
+./main --ast --no-optimize demos/parser/demo5_error_assign_call.d
 ```
 
 В первом примере у `1 + 2 * 3` корень дерева — `Binary +`, его правый

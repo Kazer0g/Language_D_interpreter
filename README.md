@@ -13,10 +13,12 @@ Test suite index: [tests/Tests.md](tests/Tests.md)
 For a walkthrough of the components, functions, and algorithms, see
 [ARCHITECTURE.md](ARCHITECTURE.md) (in Russian).
 
-## Current implementation: semantic analysis
+## Current implementation
 
-The current pipeline is `Lexer -> Parser -> AST -> Analyzer -> optimized AST`.
-Execution is not implemented yet; the CLI prints the resulting tree.
+The pipeline is `Lexer -> Parser -> AST -> Analyzer -> optimization -> Interpreter`.
+Running `main program.d` executes the program and writes only its Language D output.
+Use `--ast` to inspect the optimized tree, or `--ast --no-optimize` to inspect the
+original tree after semantic checks.
 
 Build with C++17:
 
@@ -31,8 +33,10 @@ cl /nologo /std:c++17 /EHsc /utf-8 /W4 /MT main.cpp /Fe:main.exe
 ```
 
 ```text
-main program.d                 # validate, optimize, print AST
-main --no-optimize program.d   # validate, print unchanged AST
+main program.d                 # validate, optimize, execute
+main --no-optimize program.d   # validate, execute without optimization
+main --ast program.d           # print optimized AST without executing
+main --ast --no-optimize program.d # print original AST without executing
 main --before-after program.d  # print AST before/after optimization and counters
 main --tokens program.d        # lexer output only
 ```
@@ -65,8 +69,8 @@ Find lexer, parser, and analyzer examples and materials for the presentation in
 [demos/](demos/README.md). The guide includes commands, expected results, and
 a walkthrough of the code from source text to optimized AST.
 
-Regression tests: [tests/analyzer_tests.cpp](tests/analyzer_tests.cpp), a separate
-entry point. Build and run with:
+Analyzer regression tests: [tests/analyzer_tests.cpp](tests/analyzer_tests.cpp).
+Build and run with:
 
 ```text
 g++ -std=c++17 -Wall -Wextra -o analyzer_tests tests/analyzer_tests.cpp

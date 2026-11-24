@@ -1,19 +1,10 @@
-// main.cpp — точка входа интерпретатора языка D. Здесь весь пайплайн:
-//
-//     текст -> Lexer -> токены -> Parser -> AST -> Analyzer -> AST -> ...
-//
-// Сборка:  g++ -std=c++17 -o main main.cpp
-// Запуск:  main program.d                 проверяет и печатает оптимизированное AST
-//          main --tokens program.d        печатает токены
-//          main --no-optimize program.d   проверяет и печатает исходное AST
-//          main --before-after program.d  показывает AST до и после оптимизаций
-//
-// #include "файл.cpp" просто вставляет текст файла в это место.
-// Порядок важен: парсер использует Token из лексера, поэтому лексер первым.
-
+// Single-translation-unit build order: lexer -> parser -> analyzer -> runtime -> interpreter.
+// Default invocation executes the validated program; --ast and --before-after inspect trees.
 #include "lexer.cpp"
 #include "parser.cpp"
 #include "analyzer.cpp"
+#include "runtime.cpp"
+#include "interpreter.cpp"
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -21,7 +12,7 @@
 #include <windows.h>
 #endif
 
-string readFile(string path) {
+string readFile(const string& path) {
     ifstream file(path);
     if (!file) throw runtime_error("cannot open file: " + path);
     stringstream buffer;
@@ -31,65 +22,66 @@ string readFile(string path) {
 
 int main(int argc, char** argv) {
 #ifdef _WIN32
-    // Ветки дерева печатаются в UTF-8, в том числе в Windows PowerShell.
     SetConsoleOutputCP(CP_UTF8);
 #endif
     bool onlyTokens = false;
     bool noOptimize = false;
     bool beforeAfter = false;
-    string path = "";
+    bool dumpAst = false;
+    string path;
 
-    for (int i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
         if (arg == "--tokens") onlyTokens = true;
         else if (arg == "--no-optimize") noOptimize = true;
         else if (arg == "--before-after") beforeAfter = true;
+        else if (arg == "--ast") dumpAst = true;
         else if (arg.rfind("--", 0) == 0 || !path.empty()) {
             cerr << "unknown option or extra argument: " << arg << "\n";
             return 1;
         } else path = arg;
     }
 
-    if (path.empty() || (onlyTokens && (noOptimize || beforeAfter)) || (noOptimize && beforeAfter)) {
-        cerr << "usage: main [--tokens | --no-optimize | --before-after] program.d\n";
+    if (path.empty() || (onlyTokens && (noOptimize || beforeAfter || dumpAst)) ||
+        (noOptimize && beforeAfter) || (beforeAfter && dumpAst)) {
+        cerr << "usage: main [--tokens | --before-after | --ast [--no-optimize] | --no-optimize] program.d\n";
         return 1;
     }
 
     vector<Stmt*> program;
     try {
-        string source = readFile(path);
-
-        // 1. Лексер: текст -> токены
-        Lexer lexer(source);
+        Lexer lexer(readFile(path));
         vector<Token> tokens = lexer.run();
         if (onlyTokens) {
             printTokens(tokens);
             return 0;
         }
 
-        // 2. Парсер: токены -> дерево
         Parser parser(tokens);
         program = parser.parseProgram();
-
-        // 3. Analyzer: сначала проверки всего дерева, затем оптимизации.
         Analyzer analyzer;
         analyzer.checkProgram(program);
+
         if (beforeAfter) {
             printTree({"Program before optimization", stmtTrees(program)});
-        }
-        if (!noOptimize) analyzer.optimizeProgram(program);
-        printTree({beforeAfter ? "Program after optimization" : "Program", stmtTrees(program)});
-        if (beforeAfter) {
+            analyzer.optimizeProgram(program);
+            printTree({"Program after optimization", stmtTrees(program)});
             cout << "Optimizations: " << analyzer.foldedExpressions << " constant expressions folded, "
                  << analyzer.removedStatements << " unreachable statements removed\n";
+        } else {
+            if (!noOptimize) analyzer.optimizeProgram(program);
+            if (dumpAst) {
+                printTree({noOptimize ? "Program before optimization" : "Program", stmtTrees(program)});
+            } else {
+                Interpreter interpreter(cout);
+                interpreter.run(program);
+            }
         }
-        // 4. Интерпретатор: дерево -> выполнение (будет следующим шагом).
         destroyProgram(program);
-    } catch (exception& e) {
+    } catch (const exception& e) {
         destroyProgram(program);
         cerr << e.what() << "\n";
         return 1;
     }
-    
     return 0;
 }
