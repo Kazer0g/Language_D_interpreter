@@ -778,7 +778,7 @@ TreeNode stmtTree(Stmt* s) {
             TreeNode n = {"Declaration"};
             for (size_t i = 0; i < s->names.size(); i++) {
                 if (s->values[i]) n.kids.push_back({s->names[i] + " :=", {exprTree(s->values[i])}});
-                else              n.kids.push_back({s->names[fi] + " (none)"});
+                else              n.kids.push_back({s->names[i] + " (none)"});
             }
             return n;
         }

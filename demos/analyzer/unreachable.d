@@ -1,4 +1,4 @@
-// main --before-after analyzer_demo/unreachable.d
+// ./main --before-after demos/analyzer/unreachable.d
 var f := func is
     if true then
         return 2 + 3

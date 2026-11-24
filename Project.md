@@ -1,4 +1,4 @@
-[Project D](Project%20D.pdf)
+[Project D](demos/presentations/Project%20D.pdf)
 Interpreter
 C++, hand-written parser
 No target language

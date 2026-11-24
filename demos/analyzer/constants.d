@@ -1,4 +1,4 @@
-// main --before-after analyzer_demo/constants.d
+// ./main --before-after demos/analyzer/constants.d
 var x := 2 + 3 * 4
 print x, 3 < 5, -7 / 2, 1 + 2.5, "hello " + "world", not false
 

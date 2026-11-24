@@ -1,6 +1,6 @@
 # Language D — Specification
 
-Dynamic, interpreted language. Source: [Project D.pdf](Project%20D.pdf).
+Dynamic, interpreted language. Source: [Project D.pdf](demos/presentations/Project%20D.pdf).
 
 Every topic below is given as **General form** (the production/rule exactly as the
 description states it) followed by an **Example**, and a **Tests** link to the block
@@ -58,9 +58,9 @@ undeclared names, duplicate declarations, and function arity remain runtime conc
 as specified in Q24. The three former parser placement checks now report
 `Semantic error at line:column`; grammar violations still report `Syntax error`.
 
-Lab examples: [analyzer_demo/](analyzer_demo/). Start with
-`main --before-after analyzer_demo/constants.d` and
-`main --before-after analyzer_demo/unreachable.d`; `error_*.d` demonstrate diagnostics.
+Find lexer, parser, and analyzer examples and materials for the presentation in
+[demos/](demos/README.md). The guide includes commands, expected results, and
+a walkthrough of the code from source text to optimized AST.
 
 Regression tests: [tests/analyzer_tests.cpp](tests/analyzer_tests.cpp), a separate
 entry point. Build and run with:
