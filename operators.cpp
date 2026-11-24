@@ -62,19 +62,8 @@ bool isComparison(TokenKind operation) {
            operation == T_EQUAL || operation == T_NOT_EQUAL;
 }
 
-bool compare(TokenKind operation, double left, double right) {
-    switch (operation) {
-    case T_LESS: return left < right;
-    case T_LESS_EQ: return left <= right;
-    case T_GREATER: return left > right;
-    case T_GREATER_EQ: return left >= right;
-    case T_EQUAL: return left == right;
-    case T_NOT_EQUAL: return left != right;
-    default: return false;
-    }
-}
-
-bool compareIntegers(TokenKind operation, long long left, long long right) {
+template<class T>
+bool compare(TokenKind operation, const T& left, const T& right) {
     switch (operation) {
     case T_LESS: return left < right;
     case T_LESS_EQ: return left <= right;
@@ -121,7 +110,7 @@ Value Runtime::binary(const Expr* expression, const Value& left,
     if (isNumeric(left) && isNumeric(right)) {
         if (left.kind == V_INT && right.kind == V_INT) {
             if (isComparison(operation))
-                return boolValue(compareIntegers(operation, left.integer,
+                return boolValue(compare(operation, left.integer,
                                                  right.integer));
             long long result = 0;
             bool valid = false;
