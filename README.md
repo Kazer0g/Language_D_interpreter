@@ -10,6 +10,9 @@ numbered and collected in [§11](#11-spec-ambiguities-and-decisions).
 
 Test suite index: [tests/Tests.md](tests/Tests.md)
 
+For a walkthrough of the components, functions, and algorithms, see
+[ARCHITECTURE.md](ARCHITECTURE.md) (in Russian).
+
 ## Current implementation: semantic analysis
 
 The current pipeline is `Lexer -> Parser -> AST -> Analyzer -> optimized AST`.
